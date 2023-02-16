@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      table,
+      th,
+      td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+        font-size: 18px;
+        font-weight: bold;
+      }
+      td {
+        font-size: 16px;
+      }
+      .registered {
+        background-color: lightblue;
+        color: white;
+        font-weight: bold;
+      }
+      button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <table style="width:100%">
+      <tr>
+        <th>Dia da Semana</th>
+        <th>Tipo de Conteúdo</th>
+        <th>O que Postar</th>
+        <th>Status</th>
+      </tr>
+      <tr>
+        <td>Segunda-feira</td>
+        <td>Apresentação de Produto</td>
+        <td>Apresente uma nova peça ou acessório de macramê em sua loja online e compartilhe informações sobre as especificações e disponibilidade.</td>
+        <td><button id="Monday-Product-Presentation">Fazer</button></td>
+      </tr>
+      <tr>
+        <td>Terça-feira</td>
+        <td>Dicas de Decoração</td>
+        <td>Compartilhe dicas e ideias sobre como usar peças de macramê para decorar sua casa ou escritório.</td>
+        <td><button id="Tuesday-Decoration-Tips">Fazer</button></td>
+      </tr>
+      <tr>
+        <td>Quarta-feira</td>
+        <td>Tutorial</td>
+        <td>Compartilhe um tutorial passo a passo sobre como criar uma peça de macramê ou como usar um determinado acessório.</td>
+        <td><button id="Wednesday-Tutorial">Fazer</button></td>
+      </tr>
+      <tr>
+        <td>Quinta-feira</td>
+        <td>Conteúdo de Destaque</td>
+        <td>Destaque uma peça de macramê em particular em sua loja online e compartilhe informações sobre o material, técnica e inspiração por trás dele.</td>
+        <td
+        <td><button id="Thursday-Highlight">Fazer</button></td>
+      </tr>
+      <tr>
+        <td>Sexta-feira</td>
+        <td>Conteúdo de Histórias</td>
+        <td>Compartilhe histórias ou depoimentos de clientes sobre como eles usam suas peças de macramê em suas casas ou em eventos especiais.</td>
+        <td><button id="Friday-Stories">Fazer</button></td>
+      </tr>
+      <tr>
+        <td>Sábado</td>
+        <td>Inspiração</td>
+        <td>Compartilhe imagens ou vídeos de peças de macramê criadas por outros artistas ou de projetos de decoração que possam inspirar seus seguidores.</td>
+        <td><button id="Saturday-Inspiration">Fazer</button></td>
+      </tr>
+      <tr>
+        <td>Domingo</td>
+        <td>Humor</td>
+        <td>Compartilhe uma piada ou meme relacionado a macramê ou decoração para animar seus seguidores no final de semana.</td>
+        <td><button id="Sunday-Humor">Fazer</button></td>
+      </tr>
+    </table>
+
+    <script>
+      document.getElementById("Monday-Product-Presentation").addEventListener("click", function() {
+        alert("Conteúdo da segunda-feira feito!");
+        this.classList.add("registered");
+        this.innerHTML = "Feito";
+      });
+
+      document.getElementById("Tuesday-Decoration-Tips").addEventListener("click", function() {
+        alert("Conteúdo da terça-feira feito!");
+        this.classList.add("registered");
+        this.innerHTML = "Feito";
+      });
+
+      document.getElementById("Wednesday-Tutorial").addEventListener("click", function() {
+        alert("Conteúdo da quarta-feira feito!");
+        this.classList.add("registered");
+        this.innerHTML = "Feito";
+      });
+
+      document.getElementById("Thursday-Highlight").addEventListener("click", function() {
+        alert("Conteúdo da quinta-feira feito!");
+        this.classList.add("registered");
+        this.innerHTML = "Feito";
+      });
+
+      document.getElementById("Friday-Stories").addEventListener("click", function() {
+        alert("Conteúdo da sexta-feira feito!");
+        this.classList.add("registered");
+        this.innerHTML = "Feito";
+      });
+
+      document.getElementById("Saturday-Inspiration").addEventListener("click", function() {
+        alert("Conteúdo do sábado feito!");
+        this.classList.add("registered");
+              this.innerHTML = "Feito";
+      });
+
+      document.getElementById("Sunday-Humor").addEventListener("click", function() {
+        alert("Conteúdo do domingo feito!");
+        this.classList.add("registered");
+        this.innerHTML = "Feito";
+      });
+    </script>
+  </body>
+</html>
+
+ <body>
+  <body>
+  
+ <body>
+  <!-- Your existing HTML code -->
+
+  <button id="background-color-select">Escolher cor de fundo</button>
+  <table id="color-options">
+    <tr>
+      <td class="color-option" id="color-option-1" style="background: linear-gradient(to right, #E6E6E6, #8B5E3C);"></td>
+      <td class="color-option" id="color-option-2" style="background: linear-gradient(to right, #F5A623, #E9D460);"></td>
+      <td class="color-option" id="color-option-3" style="background: linear-gradient(to right, #2E294E, #D4DFE6);"></td>
+    </tr>
+    <tr>
+      <td class="color-option" id="color-option-4" style="background: linear-gradient(to right, #E2D1C3, #F4A950);"></td>
+      <td class="color-option" id="color-option-5" style="background: linear-gradient(to right, #F0EAD6, #BFBFBF);"></td>
+      <td class="color-option" id="color-option-6" style="background: linear-gradient(to right, #E9D67A, #F5A623);"></td>
+    </tr>
+  </table>
+
+  <script>
+    document.getElementById("background-color-select").addEventListener("click", function() {
+      document.getElementById("color-options").style.display = "table";
+    });
+
+    var colorOptions = document.querySelectorAll(".color-option");
+    for (var i = 0; i < colorOptions.length; i++) {
+      colorOptions[i].addEventListener("click", function() {
+        document.body.style.background = this.style.background;
+        document.getElementById("color-options").style.display = "none";
+
+        // Ensure text is legible and has good contrast against the background
+        var backgroundColor = window.getComputedStyle(document.body).getPropertyValue("background-color");
+        if (isLightColor(backgroundColor)) {
+          document.body.style.color = "#000000";
+        } else {
+          document.body.style.color = "#ffffff";
+        }
+      });
+    }
+
+    function isLightColor(color) {
+      // Convert the color string to an RGB value
+      var colorArray = color.match(/\d+/g).map(function(n) {
+        return parseInt(n, 10);
+      });
+      
+      // Calculate the brightness value
+      var brightness = (colorArray[0] * 299 + colorArray[1] * 587 + colorArray[2] * 114) / 1000;
+
+      // Return true if the brightness value is greater than 128, indicating a light color
+      return brightness > 128;
+    }
+  </script>
+
+    <style>
+    #color-options {
+      display: none;
+      position: absolute;
+      top: 40px;
+      left: 0;
+      right: 0;
+      margin: 0 auto;
+      width: 600px;
+      text-align: center;
+    }
+
+    .color-option {
+      width: 33.33%;
+      height: 75px;
+      cursor: pointer;
+      border: 1px solid #333333;
+    }
+  </style>
+</body>
+
+<style>
+  body {
+    text-shadow: 1px 1px 2px #000000;
+  }
+</style>
+
+
+<style>
+  /* Add styles for larger screens */
+  @media only screen and (min-width: 600px) {
+    /* Your styles */
+  }
+
+  /* Add styles for smaller screens */
+  @media only screen and (max-width: 599px) {
+    /* Your styles */
+  }
+</style>
+
+<style>
+  body {
+    background-color: #000000;
+    color: #FFFFFF;
+  }
+</style>
+
+<script>
+  function markAsDone(button) {
+    button.innerHTML = "Feito";
+    button.disabled = true;
+  }
+</script>

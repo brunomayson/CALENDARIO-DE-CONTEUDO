@@ -57,10 +57,10 @@
   <body class="min-h-full bg-transparent text-slate-900">
     <div id="root" class="min-h-full"></div>
 
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script
       crossorigin
-      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
     ></script>
     <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script
@@ -70,39 +70,63 @@
 
     <script type="text/babel">
       const { useEffect, useMemo, useState } = React;
+      const fallbackIcon = (emoji, label) => ({ className = "", style = {}, ...rest }) => (
+        <span
+          role="img"
+          aria-label={label}
+          className={className}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            ...style,
+          }}
+          {...rest}
+        >
+          {emoji}
+        </span>
+      );
+
+      const lucide = window.lucideReact || {};
+      if (!window.lucideReact) {
+        console.warn(
+          "[AcademiaCK3] lucide-react UMD não foi carregado. Ícones serão exibidos com emojis de fallback."
+        );
+      }
+
       const {
-        Trophy,
-        Brain,
-        Castle,
-        Shield,
-        Swords,
-        Scroll,
-        HeartHandshake,
-        Crown,
-        Network,
-        Building,
-        Settings,
-        Target,
-        CheckCircle2,
-        XCircle,
-        ArrowRight,
-        ArrowLeft,
-        Sparkles,
-        BookOpen,
-        AlertTriangle,
-        Star,
-        HelpCircle,
-        Layers,
-        Lock,
-        Unlock,
-        Sword,
-        Banknote,
-        Church,
-        Users,
-        Coins,
-        Hammer,
-        ShieldQuestion,
-      } = lucideReact;
+        Trophy = fallbackIcon("🏆", "troféu"),
+        Brain = fallbackIcon("🧠", "cérebro"),
+        Castle = fallbackIcon("🏰", "castelo"),
+        Shield = fallbackIcon("🛡️", "escudo"),
+        Swords = fallbackIcon("⚔️", "espadas"),
+        Scroll = fallbackIcon("📜", "pergaminho"),
+        HeartHandshake = fallbackIcon("🤝", "aliança"),
+        Crown = fallbackIcon("👑", "coroa"),
+        Network = fallbackIcon("🕸️", "rede"),
+        Building = fallbackIcon("🏗️", "construção"),
+        Settings = fallbackIcon("⚙️", "configurações"),
+        Target = fallbackIcon("🎯", "alvo"),
+        CheckCircle2 = fallbackIcon("✅", "concluído"),
+        XCircle = fallbackIcon("❌", "incorreto"),
+        ArrowRight = fallbackIcon("➡️", "avançar"),
+        ArrowLeft = fallbackIcon("⬅️", "voltar"),
+        Sparkles = fallbackIcon("✨", "brilho"),
+        BookOpen = fallbackIcon("📖", "livro"),
+        AlertTriangle = fallbackIcon("⚠️", "alerta"),
+        Star = fallbackIcon("⭐", "estrela"),
+        HelpCircle = fallbackIcon("❓", "ajuda"),
+        Layers = fallbackIcon("🗂️", "camadas"),
+        Lock = fallbackIcon("🔒", "bloqueado"),
+        Unlock = fallbackIcon("🔓", "desbloqueado"),
+        Sword = fallbackIcon("🗡️", "espada"),
+        Banknote = fallbackIcon("💵", "moeda"),
+        Church = fallbackIcon("⛪", "igreja"),
+        Users = fallbackIcon("🧑‍🤝‍🧑", "usuários"),
+        Coins = fallbackIcon("🪙", "moedas"),
+        Hammer = fallbackIcon("🔨", "martelo"),
+        ShieldQuestion = fallbackIcon("❓", "dúvida"),
+      } = lucide;
 
       const Tag = ({ children }) => (
         <span

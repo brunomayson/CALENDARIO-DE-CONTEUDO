@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Laboratório dos Números</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      body {
+        min-height: 100vh;
+        background: radial-gradient(circle at top, #312e81, #4c1d95, #831843);
+      }
+      .fade-enter {
+        animation: fadeIn 0.4s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="text-gray-900">
+    <div id="app" class="fade-enter"></div>
+
+    <script>
+      const state = {
+        currentScreen: "welcome",
+        userLevel: null,
+        currentModule: null,
+        currentQuestion: 0,
+        score: 0,
+        consecutiveCorrect: 0,
+        consecutiveWrong: 0,
+        difficulty: "medium",
+        feedback: null,
+        completedPlanets: [],
+        totalStars: 0,
+        diagnosticAnswers: [],
+        answeredInModule: 0,
+        lessonStep: 0,
+      };
+
+      const planets = [
+        {
+          id: "fracoes",
+          name: "Planeta Pizzarium",
+          color: "from-orange-500 to-red-600",
+          emoji: "🍕",
+        },
+        {
+          id: "decimais",
+          name: "Planeta Decimalis",
+          color: "from-purple-500 to-pink-600",
+          emoji: "💎",
+        },
+        {
+          id: "operacoes",
+          name: "Planeta Calcularis",
+          color: "from-blue-500 to-cyan-600",
+          emoji: "🔢",
+        },
+        {
+          id: "logica",
+          name: "Planeta Enigmatis",
+          color: "from-green-500 to-teal-600",
+          emoji: "🧩",
+        },
+      ];
+
+      const diagnosticQuestions = [
+        {
+          question: "Quanto é 48 ÷ 6?",
+          options: ["6", "7", "8", "9"],
+          correct: 2,
+          topic: "operacoes",
+        },
+        {
+          question: "Qual fração representa metade?",
+          options: ["1/4", "1/2", "1/3", "2/4"],
+          correct: 1,
+          topic: "fracoes",
+        },
+        {
+          question: "0.5 é igual a:",
+          options: ["5/10", "5/100", "1/5", "5/1"],
+          correct: 0,
+          topic: "decimais",
+        },
+        {
+          question:
+            "Se João tem 12 anos e Maria tem o dobro, quantos anos tem Maria?",
+          options: ["20", "22", "24", "26"],
+          correct: 2,
+          topic: "logica",
+        },
+        {
+          question: "Qual é 30% de 100?",
+          options: ["3", "30", "300", "0.3"],
+          correct: 1,
+          topic: "decimais",
+        },
+      ];
+
+      const moduleLessons = {
+        fracoes: {
+          title: "🍕 Entendendo Frações",
+          steps: [
+            {
+              title: "O que é uma fração?",
+              content:
+                "Uma fração representa uma parte de um todo. É como dividir algo em pedaços iguais!",
+              visual: "🍕",
+              example:
+                "Imagine uma pizza inteira. Se você divide em 4 pedaços iguais e come 1, você comeu 1/4 (um quarto) da pizza!",
+            },
+            {
+              title: "Como ler uma fração",
+              content:
+                "A fração tem duas partes: o número de cima (numerador) mostra quantos pedaços você tem. O número de baixo (denominador) mostra em quantos pedaços o todo foi dividido.",
+              visual: "1/4",
+              example:
+                "Em 1/4: O 1 (em cima) = 1 pedaço que você pegou. O 4 (embaixo) = pizza dividida em 4 pedaços.",
+            },
+            {
+              title: "Frações no dia a dia",
+              content:
+                "Usamos frações o tempo todo! Metade de uma maçã é 1/2. Um quarto de hora são 15 minutos (1/4 de 60).",
+              visual: "🍎⏰",
+              example: "Quando você diz 'comi metade do bolo', está usando fração: 1/2!",
+            },
+          ],
+        },
+        operacoes: {
+          title: "🔢 Operações Matemáticas",
+          steps: [
+            {
+              title: "Adição: Juntar quantidades",
+              content:
+                "Somar é juntar coisas! Se você tem 3 balas e ganha mais 2, agora tem 5 balas.",
+              visual: "🍬🍬🍬 + 🍬🍬 = 🍬🍬🍬🍬🍬",
+              example: "3 + 2 = 5. Você pode usar os dedos para contar!",
+            },
+            {
+              title: "Subtração: Tirar quantidades",
+              content:
+                "Subtrair é tirar algo. Se você tinha 5 balas e comeu 2, restam 3 balas.",
+              visual: "🍬🍬🍬🍬🍬 - 🍬🍬 = 🍬🍬🍬",
+              example: "5 - 2 = 3. É o contrário de somar!",
+            },
+            {
+              title: "Multiplicação: Somas repetidas",
+              content:
+                "Multiplicar é somar a mesma coisa várias vezes. 3 × 4 significa '3 + 3 + 3 + 3'.",
+              visual: "3 + 3 + 3 + 3 = 12",
+              example:
+                "Se você tem 3 caixas com 4 chocolates cada, você tem 3 × 4 = 12 chocolates!",
+            },
+            {
+              title: "Divisão: Repartir igualmente",
+              content:
+                "Dividir é repartir algo em partes iguais. 12 ÷ 3 significa 'dividir 12 em 3 grupos iguais'.",
+              visual: "12 ÷ 3 = 4",
+              example:
+                "Se você divide 12 balas entre 3 amigos, cada um recebe 4 balas!",
+            },
+          ],
+        },
+        decimais: {
+          title: "💎 Números Decimais",
+          steps: [
+            {
+              title: "O que são decimais?",
+              content:
+                "Decimais são números que têm uma vírgula (ou ponto). Eles representam partes menores que 1.",
+              visual: "0,5 = metade",
+              example:
+                "0,5 é o mesmo que 1/2 (metade). 0,25 é o mesmo que 1/4 (um quarto).",
+            },
+            {
+              title: "Decimais no dinheiro",
+              content:
+                "Você usa decimais todos os dias com dinheiro! R$ 1,50 significa 1 real e 50 centavos.",
+              visual: "💰 R$ 1,50",
+              example: "50 centavos é metade de 1 real, ou seja, 0,5 real!",
+            },
+          ],
+        },
+        logica: {
+          title: "🧩 Raciocínio Lógico",
+          steps: [
+            {
+              title: "Resolvendo problemas passo a passo",
+              content:
+                "Para resolver um problema, leia com atenção, identifique o que você sabe e o que precisa descobrir.",
+              visual: "🤔",
+              example:
+                "Problema: 'Ana tem 5 anos a mais que Bruno. Se Bruno tem 8 anos, quantos anos tem Ana?' Passo 1: Bruno tem 8. Passo 2: Ana tem 5 a mais. Resposta: 8 + 5 = 13 anos.",
+            },
+            {
+              title: "Padrões e sequências",
+              content:
+                "Um padrão é algo que se repete. Identificar padrões ajuda a prever o que vem depois.",
+              visual: "2, 4, 6, 8, ?",
+              example:
+                "Na sequência 2, 4, 6, 8... estamos somando 2 cada vez. O próximo é 10!",
+            },
+          ],
+        },
+      };
+
+      const moduleQuestions = {
+        fracoes: {
+          easy: [
+            {
+              question:
+                "Se você dividir uma pizza em 4 partes iguais e comer 1, que fração comeu?",
+              visual: "🍕 dividida em 4 partes, 1 colorida",
+              options: ["1/4", "1/2", "2/4", "4/1"],
+              correct: 0,
+              explanation:
+                "Você comeu 1 parte de um total de 4 partes iguais. Isso é 1/4 (um quarto)!",
+            },
+            {
+              question: "Qual fração é maior: 1/2 ou 1/4?",
+              visual: "Compare: metade vs um quarto",
+              options: ["1/2", "1/4", "São iguais", "Não sei"],
+              correct: 0,
+              explanation:
+                "1/2 significa dividir em 2 partes (pedaços maiores). 1/4 divide em 4 partes (pedaços menores). Então 1/2 é maior!",
+            },
+          ],
+          medium: [
+            {
+              question: "Se 2/8 de uma pizza foram comidos, quantos pedaços restam?",
+              visual: "Pizza com 8 pedaços, 2 faltando",
+              options: ["4", "6", "8", "2"],
+              correct: 1,
+              explanation:
+                "Se eram 8 pedaços e 2 foram comidos, restam 8 - 2 = 6 pedaços!",
+            },
+            {
+              question: "Qual fração é equivalente a 2/4?",
+              options: ["1/2", "2/8", "4/2", "1/4"],
+              correct: 0,
+              explanation:
+                "2/4 simplifica para 1/2 dividindo numerador e denominador por 2.",
+            },
+          ],
+          hard: [
+            {
+              question: "Simplifique a fração 4/8:",
+              options: ["1/2", "2/4", "8/16", "4/8"],
+              correct: 0,
+              explanation:
+                "4/8 pode ser simplificado dividindo ambos por 4: 4÷4 = 1 e 8÷4 = 2, então 1/2!",
+            },
+            {
+              question: "Qual é maior: 3/5 ou 4/7?",
+              options: ["3/5", "4/7", "São iguais", "Não sei"],
+              correct: 0,
+              explanation:
+                "Comparando 3/5 (0,6) e 4/7 (~0,571), 3/5 é maior.",
+            },
+          ],
+        },
+        operacoes: {
+          easy: [
+            {
+              question: "Quanto é 15 + 27?",
+              options: ["40", "41", "42", "43"],
+              correct: 2,
+              explanation:
+                "15 + 27 = 42. Pense: 15 + 20 = 35, depois 35 + 7 = 42!",
+            },
+            {
+              question: "Calcule 36 − 9:",
+              options: ["25", "26", "27", "28"],
+              correct: 2,
+              explanation:
+                "36 − 9 = 27. Dica: 36 − 10 = 26, depois some 1 → 27.",
+            },
+          ],
+          medium: [
+            {
+              question:
+                "Se você tem 3 caixas com 12 chocolates em cada, quantos chocolates tem no total?",
+              options: ["15", "24", "36", "48"],
+              correct: 2,
+              explanation: "É multiplicação: 3 × 12 = 36 chocolates!",
+            },
+            {
+              question: "Qual é o resultado de 96 ÷ 8?",
+              options: ["10", "11", "12", "13"],
+              correct: 2,
+              explanation: "8 × 12 = 96, então 96 ÷ 8 = 12.",
+            },
+          ],
+          hard: [
+            {
+              question: "Qual é o resultado de 144 ÷ 12?",
+              options: ["10", "11", "12", "13"],
+              correct: 2,
+              explanation: "144 ÷ 12 = 12. Pense: 12 × 12 = 144.",
+            },
+            {
+              question: "Resolva: 18 × 7",
+              options: ["112", "124", "126", "128"],
+              correct: 2,
+              explanation: "18×7 = (20×7) − (2×7) = 140 − 14 = 126.",
+            },
+          ],
+        },
+        decimais: {
+          easy: [
+            {
+              question: "Qual decimal representa metade?",
+              options: ["0,2", "0,3", "0,4", "0,5"],
+              correct: 3,
+              explanation: "Metade é 1/2, que em decimal é 0,5.",
+            },
+            {
+              question: "R$ 2,50 é o mesmo que:",
+              options: [
+                "2 reais e 5 centavos",
+                "2 reais e 50 centavos",
+                "25 reais",
+                "0,25 reais",
+              ],
+              correct: 1,
+              explanation: "“2,50” significa 2 reais e 50 centavos.",
+            },
+          ],
+          medium: [
+            {
+              question: "Qual é maior: 0,6 ou 0,56?",
+              options: ["0,6", "0,56", "São iguais", "Não sei"],
+              correct: 0,
+              explanation: "0,6 = 0,60; portanto 0,6 > 0,56.",
+            },
+            {
+              question: "Converta 0,25 para fração simples:",
+              options: ["1/2", "1/4", "2/5", "25/10"],
+              correct: 1,
+              explanation: "0,25 = 25/100 = 1/4 após simplificar por 25.",
+            },
+          ],
+          hard: [
+            {
+              question: "Some: 2,75 + 0,6",
+              options: ["2,81", "3,31", "3,35", "3,41"],
+              correct: 1,
+              explanation:
+                "2,75 + 0,60 = 3,35? Cuidado! 2,75 + 0,56 seria 3,31. Aqui é 0,6 → 0,60, então 2,75 + 0,60 = 3,35.",
+            },
+            {
+              question: "Subtraia: 5 − 1,3",
+              options: ["3,7", "3,6", "3,8", "3,9"],
+              correct: 0,
+              explanation: "5 − 1,3 = 3,7. Pense em 5,00 − 1,30.",
+            },
+          ],
+        },
+        logica: {
+          easy: [
+            {
+              question: "Qual número completa a sequência: 3, 6, 9, __ ?",
+              options: ["10", "11", "12", "13"],
+              correct: 2,
+              explanation: "A sequência soma 3 a cada passo. 9 + 3 = 12.",
+            },
+            {
+              question: "Bruno tem 10 figurinhas e ganhou mais 5. Quantas tem agora?",
+              options: ["13", "14", "15", "16"],
+              correct: 2,
+              explanation: "10 + 5 = 15.",
+            },
+          ],
+          medium: [
+            {
+              question: "Se todo gato mia e o Bento é um gato, então:",
+              options: [
+                "Bento não mia",
+                "Bento mia",
+                "Bento late",
+                "Não é possível saber",
+              ],
+              correct: 1,
+              explanation:
+                "Se todo gato mia e Bento é gato, conclui-se que Bento mia.",
+            },
+            {
+              question: "Qual número falta? 2, 4, 7, 11, 16, __",
+              options: ["20", "21", "22", "23"],
+              correct: 1,
+              explanation:
+                "As diferenças crescem: +2, +3, +4, +5. A próxima diferença é +6, chegando em 21.",
+            },
+          ],
+          hard: [
+            {
+              question:
+                "Ana tem o dobro da idade de Lia. Juntas somam 36. Qual a idade de Ana?",
+              options: ["12", "18", "24", "30"],
+              correct: 2,
+              explanation:
+                "Se Lia = x, Ana = 2x. 2x + x = 36 → 3x = 36 → x = 12. Logo Ana tem 24.",
+            },
+            {
+              question: "Qual das alternativas mantém o padrão? A1, B2, C3, D4, __",
+              options: ["E4", "E5", "F5", "E6"],
+              correct: 1,
+              explanation:
+                "A letra avança uma posição (A, B, C, D, E) e o número também (1, 2, 3, 4, 5).",
+            },
+          ],
+        },
+      };
+
+      const setState = (updates) => {
+        Object.assign(state, updates);
+        render();
+      };
+
+      const resetForNewJourney = () => {
+        setState({
+          currentScreen: "diagnostic",
+          currentQuestion: 0,
+          diagnosticAnswers: [],
+          score: 0,
+          consecutiveCorrect: 0,
+          consecutiveWrong: 0,
+          feedback: null,
+        });
+      };
+
+      const handleDiagnosticAnswer = (answerIndex) => {
+        const newAnswers = [
+          ...state.diagnosticAnswers,
+          {
+            question: state.currentQuestion,
+            correct: answerIndex === diagnosticQuestions[state.currentQuestion].correct,
+          },
+        ];
+
+        if (state.currentQuestion < diagnosticQuestions.length - 1) {
+          setState({
+            diagnosticAnswers: newAnswers,
+            currentQuestion: state.currentQuestion + 1,
+          });
+        } else {
+          evaluateDiagnostic(newAnswers);
+        }
+      };
+
+      const evaluateDiagnostic = (answers) => {
+        const correctCount = answers.filter((a) => a.correct).length;
+        const percentage = (correctCount / answers.length) * 100;
+
+        let level = "beginner";
+        if (percentage >= 80) level = "advanced";
+        else if (percentage >= 60) level = "intermediate";
+
+        setState({
+          diagnosticAnswers: answers,
+          userLevel: level,
+          currentScreen: "diagnostic-result",
+        });
+      };
+
+      const startModule = (planetId) => {
+        let startingDifficulty = "easy";
+        if (state.userLevel === "advanced") startingDifficulty = "hard";
+        else if (state.userLevel === "intermediate") startingDifficulty = "medium";
+
+        setState({
+          currentModule: planetId,
+          currentScreen: "lesson",
+          currentQuestion: 0,
+          score: 0,
+          consecutiveCorrect: 0,
+          consecutiveWrong: 0,
+          feedback: null,
+          answeredInModule: 0,
+          difficulty: startingDifficulty,
+          lessonStep: 0,
+        });
+      };
+
+      const startExercises = () => {
+        setState({ currentScreen: "learning", currentQuestion: 0, feedback: null });
+      };
+
+      const handleAnswer = (answerIndex) => {
+        const moduleData = moduleQuestions[state.currentModule];
+        if (!moduleData) return;
+
+        const questions = moduleData[state.difficulty] || [];
+        const currentQuestionData = questions[state.currentQuestion];
+        if (!currentQuestionData) return;
+
+        const isCorrect = answerIndex === currentQuestionData.correct;
+        const newAnswered = state.answeredInModule + 1;
+
+        if (isCorrect) {
+          const consecutiveCorrect = state.consecutiveCorrect + 1;
+          let newDifficulty = state.difficulty;
+          let adjustedCorrect = consecutiveCorrect;
+
+          if (consecutiveCorrect >= 3 && state.difficulty !== "hard") {
+            newDifficulty = state.difficulty === "easy" ? "medium" : "hard";
+            adjustedCorrect = 0;
+          }
+
+          setState({
+            score: state.score + 1,
+            consecutiveCorrect: adjustedCorrect,
+            consecutiveWrong: 0,
+            difficulty: newDifficulty,
+            feedback: {
+              type: "success",
+              message: "🌟 Incrível! Você acertou!",
+              explanation: currentQuestionData.explanation,
+            },
+            answeredInModule: newAnswered,
+          });
+        } else {
+          const consecutiveWrong = state.consecutiveWrong + 1;
+          let newDifficulty = state.difficulty;
+          let adjustedWrong = consecutiveWrong;
+
+          if (consecutiveWrong >= 2 && state.difficulty !== "easy") {
+            newDifficulty = state.difficulty === "hard" ? "medium" : "easy";
+            adjustedWrong = 0;
+          }
+
+          setState({
+            consecutiveWrong: adjustedWrong,
+            consecutiveCorrect: 0,
+            difficulty: newDifficulty,
+            feedback: {
+              type: "error",
+              message: "🤔 Ainda não está certo, mas estamos quase!",
+              explanation: currentQuestionData.explanation,
+              encouragement:
+                "Você pensou com coragem — e isso é o que faz os grandes matemáticos brilharem!",
+            },
+            answeredInModule: newAnswered,
+          });
+        }
+      };
+
+      const nextQuestion = () => {
+        const moduleData = moduleQuestions[state.currentModule];
+        if (!moduleData) return;
+
+        const questions = moduleData[state.difficulty] || [];
+
+        if (state.currentQuestion < questions.length - 1) {
+          setState({
+            currentQuestion: state.currentQuestion + 1,
+            feedback: null,
+          });
+        } else {
+          finishModule();
+        }
+      };
+
+      const finishModule = () => {
+        const answered = Math.max(state.answeredInModule, 1);
+        const finalScore = (state.score / answered) * 10;
+        const starsEarned = Math.round(finalScore / 2);
+
+        const alreadyCompleted = state.completedPlanets.includes(state.currentModule);
+        const completedPlanets = alreadyCompleted
+          ? state.completedPlanets
+          : finalScore >= 8
+          ? [...state.completedPlanets, state.currentModule]
+          : state.completedPlanets;
+
+        setState({
+          totalStars: state.totalStars + starsEarned,
+          completedPlanets,
+          currentScreen: "module-complete",
+          feedback: null,
+        });
+      };
+
+      const goToPlanets = () => {
+        setState({ currentScreen: "planets", currentQuestion: 0, feedback: null });
+      };
+
+      const getDifficultyLabel = (difficulty) => {
+        if (difficulty === "easy") return "Iniciante";
+        if (difficulty === "medium") return "Intermediário";
+        return "Avançado";
+      };
+
+      const renderStars = (count, filled) => {
+        return new Array(count)
+          .fill(0)
+          .map(
+            (_, idx) =>
+              `<span class="text-3xl ${
+                idx < filled ? "text-yellow-400" : "text-gray-300"
+              }">★</span>`
+          )
+          .join("");
+      };
+
+      const renderLessonIndicators = (total, active) => {
+        return new Array(total)
+          .fill(0)
+          .map((_, idx) => {
+            const baseClasses = "h-2 rounded-full transition-all duration-300";
+            if (idx === active) {
+              return `<div class="${baseClasses} w-10 bg-purple-600"></div>`;
+            }
+            if (idx < active) {
+              return `<div class="${baseClasses} w-4 bg-green-500"></div>`;
+            }
+            return `<div class="${baseClasses} w-3 bg-gray-300"></div>`;
+          })
+          .join("");
+      };
+
+      const render = () => {
+        const app = document.getElementById("app");
+        if (!app) return;
+
+        switch (state.currentScreen) {
+          case "welcome": {
+            app.innerHTML = `
+              <div class="min-h-screen flex items-center justify-center p-6">
+                <div class="max-w-2xl w-full text-center bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-10 shadow-2xl">
+                  <div class="mb-8 animate-bounce">
+                    <div class="mx-auto w-24 h-24 rounded-full bg-yellow-300/20 flex items-center justify-center">
+                      <span class="text-5xl">✨</span>
+                    </div>
+                  </div>
+                  <h1 class="text-6xl font-bold text-white mb-6 animate-pulse">
+                    Laboratório dos Números
+                  </h1>
+                  <div class="bg-white/10 rounded-3xl p-8 mb-8 border-2 border-white/20">
+                    <p class="text-2xl text-white mb-4">
+                      Bem-vinda, <span class="font-bold text-yellow-300">Brenda</span>!
+                    </p>
+                    <p class="text-xl text-white/90 mb-2">
+                      Aqui, cada desafio é um degrau da sabedoria matemática.
+                    </p>
+                    <p class="text-lg text-white/80">
+                      Vamos começar nossa missão? 🚀
+                    </p>
+                  </div>
+                  <button
+                    id="start-journey"
+                    class="bg-yellow-400 hover:bg-yellow-500 text-purple-900 font-bold text-2xl px-12 py-6 rounded-2xl shadow-2xl transform hover:scale-105 transition-all"
+                  >
+                    Iniciar Jornada ✨
+                  </button>
+                </div>
+              </div>
+            `;
+
+            document
+              .getElementById("start-journey")
+              .addEventListener("click", resetForNewJourney);
+            break;
+          }
+
+          case "diagnostic": {
+            const current = diagnosticQuestions[state.currentQuestion];
+            app.innerHTML = `
+              <div class="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
+                <div class="max-w-3xl mx-auto">
+                  <div class="bg-white rounded-3xl shadow-2xl p-8 mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                      <h2 class="text-3xl font-bold text-gray-800">Teste de Diagnóstico</h2>
+                      <span class="text-lg text-gray-600">
+                        Questão ${state.currentQuestion + 1} de ${
+              diagnosticQuestions.length
+            }
+                      </span>
+                    </div>
+                    <div class="bg-purple-50 p-6 rounded-2xl mb-6">
+                      <p class="text-2xl text-gray-800 mb-6">${current.question}</p>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${current.options
+                          .map(
+                            (option, idx) => `
+                              <button
+                                class="option-button bg-white hover:bg-purple-100 border-2 border-purple-200 p-4 rounded-xl text-lg font-medium transition-all hover:scale-105"
+                                data-index="${idx}"
+                              >
+                                ${option}
+                              </button>
+                            `
+                          )
+                          .join("")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+
+            app.querySelectorAll(".option-button").forEach((btn) => {
+              btn.addEventListener("click", (event) => {
+                const index = Number(event.currentTarget.dataset.index);
+                handleDiagnosticAnswer(index);
+              });
+            });
+            break;
+          }
+
+          case "diagnostic-result": {
+            const correctCount = state.diagnosticAnswers.filter((a) => a.correct).length;
+            const percentage =
+              state.diagnosticAnswers.length === 0
+                ? 0
+                : Math.round((correctCount / state.diagnosticAnswers.length) * 100);
+
+            app.innerHTML = `
+              <div class="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6">
+                <div class="max-w-4xl mx-auto">
+                  <div class="bg-white rounded-3xl shadow-2xl p-8 text-center">
+                    <div class="w-24 h-24 mx-auto mb-6 text-yellow-500 text-7xl">🏆</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Diagnóstico Completo!</h2>
+                    <div class="bg-gradient-to-r from-purple-100 to-pink-100 p-6 rounded-2xl mb-6">
+                      <p class="text-6xl font-bold text-purple-600 mb-2">${percentage}%</p>
+                      <p class="text-xl text-gray-700">
+                        Você acertou ${correctCount} de ${state.diagnosticAnswers.length} questões
+                      </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                      <div class="bg-green-100 p-4 rounded-xl">
+                        <div class="text-3xl mb-2">🟢</div>
+                        <p class="font-semibold text-green-700">Forte</p>
+                        <p class="text-sm text-gray-600">Pronta para desafios!</p>
+                      </div>
+                      <div class="bg-yellow-100 p-4 rounded-xl">
+                        <div class="text-3xl mb-2">🟡</div>
+                        <p class="font-semibold text-yellow-700">Em Desenvolvimento</p>
+                        <p class="text-sm text-gray-600">Continue praticando</p>
+                      </div>
+                      <div class="bg-red-100 p-4 rounded-xl">
+                        <div class="text-3xl mb-2">🔴</div>
+                        <p class="font-semibold text-red-700">Precisa Reforço</p>
+                        <p class="text-sm text-gray-600">Vamos revisar juntas</p>
+                      </div>
+                    </div>
+
+                    <button
+                      id="go-planets"
+                      class="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xl px-10 py-4 rounded-xl shadow-lg hover:scale-105 transition-all"
+                    >
+                      Explorar os Planetas Matemáticos 🚀
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+
+            document
+              .getElementById("go-planets")
+              .addEventListener("click", goToPlanets);
+            break;
+          }
+
+          case "planets": {
+            const progress =
+              planets.length === 0
+                ? 0
+                : (state.completedPlanets.length / planets.length) * 100;
+
+            const cards = planets
+              .map((planet, index) => {
+                const isCompleted = state.completedPlanets.includes(planet.id);
+                const prevId = planets[index - 1]?.id;
+                const isLocked =
+                  planet.id !== "fracoes" && !state.completedPlanets.includes(prevId);
+
+                return `
+                  <div
+                    class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border-2 ${
+                      isCompleted ? "border-yellow-400" : "border-white/20"
+                    } ${isLocked ? "opacity-50" : "hover:scale-105"} transition-all"
+                  >
+                    <div class="text-center">
+                      <div class="text-7xl mb-4">${planet.emoji}</div>
+                      <h3 class="text-2xl font-bold text-white mb-2">${planet.name}</h3>
+                      ${
+                        isCompleted
+                          ? `<div class="flex items-center justify-center gap-2 mb-4 text-yellow-400 font-semibold">
+                               <span class="text-xl">✅</span>
+                               <span>Planeta Conquistado!</span>
+                             </div>`
+                          : ""
+                      }
+                      ${
+                        isLocked
+                          ? `<p class="text-white/60 mb-4">🔒 Complete o planeta anterior</p>`
+                          : `<button
+                               class="planet-button bg-gradient-to-r ${planet.color} text-white font-bold px-8 py-3 rounded-xl shadow-lg transition-all mt-4"
+                               data-planet="${planet.id}"
+                             >
+                               ${isCompleted ? "Revisar Planeta" : "Explorar Planeta"} 🚀
+                             </button>`
+                      }
+                    </div>
+                  </div>
+                `;
+              })
+              .join("");
+
+            app.innerHTML = `
+              <div class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-6">
+                <div class="max-w-6xl mx-auto space-y-8">
+                  <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <h2 class="text-3xl font-bold text-white mb-2">Meu Progresso</h2>
+                        <p class="text-white/80">Continue explorando os planetas matemáticos!</p>
+                      </div>
+                      <div class="text-right">
+                        <div class="flex items-center gap-2 mb-2 justify-end">
+                          <span class="text-yellow-300 text-2xl">⭐</span>
+                          <span class="text-3xl font-bold text-yellow-300">${state.totalStars}</span>
+                        </div>
+                        <p class="text-white/80 text-sm">Estrelas conquistadas</p>
+                      </div>
+                    </div>
+                    <div class="mt-4 bg-white/20 rounded-full h-3">
+                      <div
+                        class="bg-yellow-400 h-full rounded-full transition-all duration-500"
+                        style="width: ${progress}%"
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div class="bg-gradient-to-r from-pink-500/20 to-purple-500/20 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                    <p class="text-xl text-white italic">
+                      💬 "Brenda, você está dominando os números com alegria e foco. Cada resposta sua é um passo rumo ao pensamento lógico brilhante!"
+                      <span class="block mt-2 text-right text-sm">— Dara, sua mentora</span>
+                    </p>
+                  </div>
+
+                  <div class="grid gap-6 md:grid-cols-2">
+                    ${cards}
+                  </div>
+                </div>
+              </div>
+            `;
+
+            app.querySelectorAll(".planet-button").forEach((btn) => {
+              btn.addEventListener("click", (event) => {
+                const planetId = event.currentTarget.dataset.planet;
+                startModule(planetId);
+              });
+            });
+            break;
+          }
+
+          case "lesson": {
+            const lesson = moduleLessons[state.currentModule];
+            const planet = planets.find((p) => p.id === state.currentModule);
+
+            if (!lesson) {
+              goToPlanets();
+              return;
+            }
+
+            const step = lesson.steps[state.lessonStep];
+
+            app.innerHTML = `
+              <div class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6">
+                <div class="max-w-4xl mx-auto space-y-6">
+                  <div class="bg-white rounded-2xl shadow-lg p-6 flex items-center gap-4">
+                    <div class="text-5xl">${planet?.emoji ?? ""}</div>
+                    <div>
+                      <h2 class="text-3xl font-bold text-gray-800">${lesson.title}</h2>
+                      <p class="text-gray-600">Vamos aprender juntas antes de praticar!</p>
+                    </div>
+                  </div>
+
+                  <div class="bg-white rounded-3xl shadow-2xl p-8">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                      <h3 class="text-2xl font-bold text-purple-600">${step.title}</h3>
+                      <span class="text-sm text-gray-600">
+                        Passo ${state.lessonStep + 1} de ${lesson.steps.length}
+                      </span>
+                    </div>
+
+                    <div class="bg-purple-50 p-6 rounded-2xl mb-6 text-center">
+                      <div class="text-6xl mb-4">${step.visual}</div>
+                      <p class="text-xl text-gray-800 font-medium">${step.content}</p>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-blue-50 to-green-50 border-2 border-blue-200 p-6 rounded-2xl">
+                      <p class="text-sm font-semibold text-blue-700 mb-2">💡 Exemplo Prático:</p>
+                      <p class="text-lg text-gray-700">${step.example}</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-4 justify-between mt-8">
+                      ${
+                        state.lessonStep > 0
+                          ? `<button
+                               id="lesson-prev"
+                               class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-xl transition-all"
+                             >
+                               ← Anterior
+                             </button>`
+                          : ""
+                      }
+                      ${
+                        state.lessonStep < lesson.steps.length - 1
+                          ? `<button
+                               id="lesson-next"
+                               class="ml-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold px-8 py-3 rounded-xl hover:scale-105 transition-all"
+                             >
+                               Próximo →
+                             </button>`
+                          : `<button
+                               id="lesson-start"
+                               class="ml-auto bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold px-10 py-4 rounded-xl hover:scale-105 transition-all text-lg"
+                             >
+                               Pronto! Vamos Praticar! 🚀
+                             </button>`
+                      }
+                    </div>
+                  </div>
+
+                  <div class="flex justify-center gap-2">
+                    ${renderLessonIndicators(lesson.steps.length, state.lessonStep)}
+                  </div>
+                </div>
+              </div>
+            `;
+
+            const prevBtn = document.getElementById("lesson-prev");
+            if (prevBtn) {
+              prevBtn.addEventListener("click", () => {
+                setState({ lessonStep: Math.max(0, state.lessonStep - 1) });
+              });
+            }
+
+            const nextBtn = document.getElementById("lesson-next");
+            if (nextBtn) {
+              nextBtn.addEventListener("click", () => {
+                setState({
+                  lessonStep: Math.min(lesson.steps.length - 1, state.lessonStep + 1),
+                });
+              });
+            }
+
+            const startBtn = document.getElementById("lesson-start");
+            if (startBtn) {
+              startBtn.addEventListener("click", startExercises);
+            }
+            break;
+          }
+
+          case "learning": {
+            const moduleData = moduleQuestions[state.currentModule];
+            const questions = moduleData ? moduleData[state.difficulty] || [] : [];
+            const currentQuestionData = questions[state.currentQuestion];
+            const planet = planets.find((p) => p.id === state.currentModule);
+
+            if (!currentQuestionData) {
+              app.innerHTML = `
+                <div class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-purple-50 to-pink-50">
+                  <div class="bg-white rounded-3xl shadow-2xl p-8 text-center max-w-xl">
+                    <p class="text-2xl mb-6 text-gray-800">Você concluiu as questões disponíveis deste nível.</p>
+                    <button
+                      id="finish-module"
+                      class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xl py-4 rounded-xl hover:scale-105 transition-all"
+                    >
+                      Finalizar Módulo
+                    </button>
+                  </div>
+                </div>
+              `;
+
+              const finishBtn = document.getElementById("finish-module");
+              if (finishBtn) finishBtn.addEventListener("click", finishModule);
+              break;
+            }
+
+            app.innerHTML = `
+              <div class="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-6">
+                <div class="max-w-4xl mx-auto space-y-6">
+                  <div class="bg-white rounded-2xl shadow-lg p-6 flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                      <span class="text-4xl">${planet?.emoji ?? ""}</span>
+                      <div>
+                        <h2 class="text-2xl font-bold text-gray-800">${planet?.name ?? ""}</h2>
+                        <p class="text-sm text-gray-600">Nível: ${getDifficultyLabel(state.difficulty)}</p>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-sm text-gray-600">Questão ${state.currentQuestion + 1}/${questions.length}</p>
+                      <p class="text-lg font-bold text-purple-600">Pontos: ${state.score}</p>
+                    </div>
+                  </div>
+
+                  <div class="bg-white rounded-3xl shadow-2xl p-8">
+                    ${
+                      currentQuestionData.visual
+                        ? `<div class="bg-purple-50 p-6 rounded-2xl mb-6 text-center">
+                             <p class="text-lg text-gray-700">${currentQuestionData.visual}</p>
+                           </div>`
+                        : ""
+                    }
+                    <p class="text-2xl text-gray-800 mb-8">${currentQuestionData.question}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      ${currentQuestionData.options
+                        .map(
+                          (option, idx) => `
+                            <button
+                              class="answer-button bg-gradient-to-r from-purple-100 to-pink-100 hover:from-purple-200 hover:to-pink-200 border-2 border-purple-300 p-6 rounded-2xl text-xl font-medium transition-all hover:scale-105 disabled:opacity-50"
+                              data-index="${idx}"
+                              ${state.feedback ? "disabled" : ""}
+                            >
+                              ${option}
+                            </button>
+                          `
+                        )
+                        .join("")}
+                    </div>
+                  </div>
+
+                  ${
+                    state.feedback
+                      ? `<div class="bg-white rounded-3xl shadow-2xl p-8 border-4 ${
+                          state.feedback.type === "success"
+                            ? "border-green-400"
+                            : "border-orange-400"
+                        }">
+                           <div class="text-center mb-4">
+                             <div class="text-5xl mb-4">${
+                               state.feedback.type === "success" ? "✅" : "⚠️"
+                             }</div>
+                             <h3 class="text-3xl font-bold mb-2">${state.feedback.message}</h3>
+                           </div>
+                           <div class="bg-blue-50 p-6 rounded-2xl mb-4">
+                             <p class="text-lg text-gray-800">${state.feedback.explanation}</p>
+                           </div>
+                           ${
+                             state.feedback.encouragement
+                               ? `<div class="bg-purple-50 p-4 rounded-xl mb-4">
+                                    <p class="text-center text-purple-700 italic">${state.feedback.encouragement}</p>
+                                  </div>`
+                               : ""
+                           }
+                           <button
+                             id="next-question"
+                             class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xl py-4 rounded-xl hover:scale-105 transition-all"
+                           >
+                             Próximo Desafio →
+                           </button>
+                         </div>`
+                      : ""
+                  }
+                </div>
+              </div>
+            `;
+
+            app.querySelectorAll(".answer-button").forEach((btn) => {
+              btn.addEventListener("click", (event) => {
+                const index = Number(event.currentTarget.dataset.index);
+                handleAnswer(index);
+              });
+            });
+
+            const nextBtn = document.getElementById("next-question");
+            if (nextBtn) {
+              nextBtn.addEventListener("click", nextQuestion);
+            }
+            break;
+          }
+
+          case "module-complete": {
+            const planet = planets.find((p) => p.id === state.currentModule);
+            const answered = Math.max(state.answeredInModule, 1);
+            const finalScore = ((state.score / answered) * 10).toFixed(1);
+            const numericScore = parseFloat(finalScore);
+            const stars = Math.round(numericScore / 2);
+
+            app.innerHTML = `
+              <div class="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-pink-50 p-6 flex items-center justify-center">
+                <div class="max-w-2xl mx-auto text-center">
+                  <div class="animate-bounce mb-6 text-yellow-500 text-8xl">🏆</div>
+                  <h2 class="text-5xl font-bold text-gray-800 mb-4">
+                    ${numericScore >= 8 ? "Planeta Conquistado!" : "Módulo Finalizado!"}
+                  </h2>
+
+                  <div class="bg-white rounded-3xl shadow-2xl p-8 mb-6">
+                    <div class="text-6xl mb-4">${planet?.emoji ?? ""}</div>
+                    <h3 class="text-3xl font-bold text-purple-600 mb-6">${planet?.name ?? ""}</h3>
+
+                    <div class="bg-gradient-to-r from-yellow-100 to-orange-100 p-6 rounded-2xl mb-6">
+                      <p class="text-7xl font-bold text-orange-600 mb-2">${finalScore}</p>
+                      <div class="flex justify-center gap-2 mb-4">
+                        ${renderStars(5, stars)}
+                      </div>
+                      <p class="text-xl text-gray-700 font-semibold">
+                        ${
+                          numericScore >= 9
+                            ? "🌟 Excelente raciocínio!"
+                            : numericScore >= 8
+                            ? "⭐ Muito bem!"
+                            : "💪 Continue praticando! Você está no caminho certo."
+                        }
+                      </p>
+                    </div>
+
+                    <div class="bg-purple-50 p-4 rounded-xl mb-6">
+                      <p class="text-lg text-purple-700">
+                        Você acertou ${state.score} de ${answered} questões!
+                      </p>
+                    </div>
+
+                    ${
+                      numericScore >= 8
+                        ? `<div class="bg-green-50 border-2 border-green-300 p-4 rounded-xl mb-4">
+                             <p class="text-green-700 font-semibold">✅ Novo planeta desbloqueado!</p>
+                           </div>`
+                        : ""
+                    }
+                  </div>
+
+                  <button
+                    id="explore-more"
+                    class="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-2xl px-12 py-5 rounded-2xl shadow-2xl hover:scale-105 transition-all"
+                  >
+                    Explorar Mais Planetas 🚀
+                  </button>
+                </div>
+              </div>
+            `;
+
+            document
+              .getElementById("explore-more")
+              .addEventListener("click", goToPlanets);
+            break;
+          }
+
+          default:
+            goToPlanets();
+        }
+      };
+
+      render();
+    </script>
+  </body>
+</html>

@@ -50,6 +50,191 @@
         height: 1.5rem;
         font-size: 1.25rem;
       }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.18), transparent 45%),
+          radial-gradient(circle at 80% 0%, rgba(236, 72, 153, 0.16), transparent 50%),
+          radial-gradient(circle at 30% 80%, rgba(14, 165, 233, 0.15), transparent 55%);
+        pointer-events: none;
+        z-index: -2;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.05) 0%,
+            rgba(255, 255, 255, 0) 50%,
+            rgba(255, 255, 255, 0.05) 100%
+          ),
+          url("https://images.unsplash.com/photo-1604602587407-1868f3c7f08b?auto=format&fit=crop&w=1600&q=80");
+        background-size: 240px, cover;
+        background-position: center;
+        opacity: 0.12;
+        filter: saturate(120%);
+        mix-blend-mode: screen;
+        pointer-events: none;
+        z-index: -3;
+      }
+
+      .holo-card {
+        position: relative;
+        border-radius: 1.5rem;
+        background: rgba(248, 250, 252, 0.75);
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        box-shadow: 0 40px 80px rgba(79, 70, 229, 0.08);
+        overflow: hidden;
+      }
+
+      .holo-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, rgba(99, 102, 241, 0.2), transparent 45%),
+          linear-gradient(-140deg, rgba(236, 72, 153, 0.2), transparent 55%);
+        opacity: 0.7;
+        pointer-events: none;
+      }
+
+      .holo-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .hud-tile {
+        border-radius: 1rem;
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(37, 99, 235, 0.85));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 20px 35px rgba(15, 23, 42, 0.35);
+        color: #f8fafc;
+        padding: 1rem;
+        position: relative;
+      }
+
+      .hud-tile::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        pointer-events: none;
+      }
+
+      .hud-meter {
+        height: 0.4rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.22);
+        overflow: hidden;
+        margin-top: 0.75rem;
+      }
+
+      .hud-meter span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #38bdf8, #22d3ee);
+      }
+
+      .tab-button {
+        border-radius: 9999px;
+        padding: 0.55rem 1.3rem;
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        background: rgba(255, 255, 255, 0.65);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #4338ca;
+      }
+
+      .tab-button[data-active="true"] {
+        background: linear-gradient(120deg, rgba(129, 140, 248, 0.85), rgba(236, 72, 153, 0.85));
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 12px 25px rgba(99, 102, 241, 0.25);
+      }
+
+      .intel-card {
+        border-radius: 1rem;
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        padding: 1rem;
+        color: rgba(226, 232, 240, 0.92);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.45);
+      }
+
+      .intel-card strong {
+        color: #38bdf8;
+      }
+
+      .event-entry {
+        border-radius: 1rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(255, 255, 255, 0.75);
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .event-entry[data-type="alerta"] {
+        border-color: rgba(248, 113, 113, 0.35);
+        background: rgba(254, 242, 242, 0.9);
+        color: #991b1b;
+      }
+
+      .event-entry[data-type="sucesso"] {
+        border-color: rgba(16, 185, 129, 0.35);
+        background: rgba(236, 253, 245, 0.95);
+        color: #065f46;
+      }
+
+      .decision-button {
+        border-radius: 0.9rem;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        background: linear-gradient(135deg, rgba(199, 210, 254, 0.35), rgba(59, 130, 246, 0.25));
+        padding: 0.6rem 1rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .decision-button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 18px 30px rgba(99, 102, 241, 0.25);
+      }
+
+      .decision-button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .floating-spark {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.6);
+        animation: spark 6s linear infinite;
+      }
+
+      @keyframes spark {
+        from {
+          transform: translate3d(0, 0, 0) scale(1);
+          opacity: 0.8;
+        }
+        to {
+          transform: translate3d(120px, -220px, 0) scale(0);
+          opacity: 0;
+        }
+      }
     </style>
   </head>
   <body class="min-h-full bg-transparent">
@@ -567,6 +752,83 @@
         },
       ];
 
+      const DECISOES = [
+        {
+          id: "banquete",
+          titulo: "Banquete dos Vassalos",
+          emoji: "🍷",
+          descricao:
+            "Convida toda a corte para um banquete luxuoso, reduzindo tensão e fortalecendo alianças locais.",
+          custo: 120,
+          efeitos: { ouro: -120, prestigio: 85, estresse: -10 },
+          textoSucesso: "A lealdade dos vassalos aumenta e rumores positivos se espalham pelo reino.",
+        },
+        {
+          id: "treino",
+          titulo: "Drills de Elite",
+          emoji: "🛡️",
+          descricao:
+            "Treinos intensivos com os campeões e homens de armas para preparar a investida na próxima guerra.",
+          custo: 60,
+          efeitos: { ouro: -60, tropas: 240, prestigio: 35 },
+          textoSucesso: "Suas tropas ganham moral e disciplina. Os rivais ficam atentos às movimentações.",
+        },
+        {
+          id: "conselho",
+          titulo: "Conselho de Estratégia",
+          emoji: "📜",
+          descricao:
+            "Reúne conselheiros para revisar contratos, claims e rotas de comércio, destravando melhorias administrativas.",
+          custo: 0,
+          efeitos: { ouro: 90, piedade: 25 },
+          textoSucesso: "O tesouro encontra novas fontes de renda e o clero reconhece sua visão estratégica.",
+        },
+        {
+          id: "peregrinacao",
+          titulo: "Peregrinação curta",
+          emoji: "🕊️",
+          descricao:
+            "Visita relíquias locais para acalmar o espírito e inspirar o povo sem abandonar o trono por muito tempo.",
+          custo: 45,
+          efeitos: { ouro: -45, piedade: 70, estresse: -6 },
+          textoSucesso: "O povo se emociona com sua devoção e a corte recupera o foco.",
+        },
+      ];
+
+      const ALIADOS = [
+        {
+          nome: "Duquesa Matilda",
+          relacao: "Aliança defensiva",
+          poder: 82,
+          comentario: "Promete reforços em guerras contra reis franceses.",
+        },
+        {
+          nome: "Rei Harald Dentes-Azuis",
+          relacao: "Pacto de não agressão",
+          poder: 77,
+          comentario: "Atento à sua ascensão — mantenha presentes anuais.",
+        },
+        {
+          nome: "Conde Anjou",
+          relacao: "Ganho recente",
+          powerUp: true,
+          poder: 64,
+          comentario: "Apoio econômico garantido para expansões na Normandia.",
+        },
+      ];
+
+      const RUMORES = [
+        "Espiões relatam que uma facção saxã tenta financiar mercenários no norte.",
+        "Mercadores italianos oferecem desconto para contratos de longo prazo se fechar acordo esta estação.",
+        "O Papa observa sua fé reformada com curiosidade; manter piedade alta garantirá apoio futuro.",
+      ];
+
+      const PAINEL_TABS = [
+        { id: "status", titulo: "Status do Reino", emoji: "🛡️" },
+        { id: "economia", titulo: "Economia & Infra", emoji: "💰" },
+        { id: "diplomacia", titulo: "Diplomacia & Intrigas", emoji: "🤝" },
+      ];
+
       const MODULOS = [
         { id: "preparacao", nome: "Preparação", cor: "from-indigo-500 to-purple-600" },
         { id: "fundamentos", nome: "Fundamentos", cor: "from-amber-500 to-orange-600" },
@@ -587,12 +849,105 @@
         quiz: { i: 0, acertos: 0, respondeu: false, feedback: null, selecionada: null },
         dificuldade: "média",
         revisao: [],
+        painelReino: "status",
+        hud: {
+          ouro: 280,
+          prestigio: 1180,
+          piedade: 210,
+          tropas: 3200,
+          estresse: 18,
+          maxOuro: 800,
+          maxPrestigio: 2000,
+          maxPiedade: 800,
+          maxTropas: 6000,
+        },
+        eventos: [
+          {
+            tipo: "sucesso",
+            texto: "A corte comenta o potencial da Academia de Reis. Conclua o diagnóstico para desbloquear a sala de guerra.",
+            tempo: "08:00",
+          },
+          {
+            tipo: "info",
+            texto: "Os conselheiros aguardam suas instruções no painel do reino.",
+            tempo: "08:05",
+          },
+        ],
       };
 
       const app = document.getElementById("app");
 
       function setState(partial) {
         Object.assign(state, partial);
+        render();
+      }
+
+      function formatarNumero(valor) {
+        return Math.round(valor).toLocaleString("pt-BR");
+      }
+
+      function percentual(valor, maximo) {
+        if (!maximo) return 0;
+        return Math.min(100, Math.max(0, (valor / maximo) * 100));
+      }
+
+      function registrarEvento(texto, tipo = "info") {
+        const tempo = new Date().toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        state.eventos = [{ texto, tipo, tempo }, ...state.eventos].slice(0, 7);
+      }
+
+      function ajustarHud(delta = {}) {
+        const hud = state.hud;
+        if (typeof delta.ouro === "number") {
+          hud.ouro = Math.min(hud.maxOuro, Math.max(0, hud.ouro + delta.ouro));
+        }
+        if (typeof delta.prestigio === "number") {
+          hud.prestigio = Math.min(
+            hud.maxPrestigio,
+            Math.max(0, hud.prestigio + delta.prestigio)
+          );
+        }
+        if (typeof delta.piedade === "number") {
+          hud.piedade = Math.min(
+            hud.maxPiedade,
+            Math.max(0, hud.piedade + delta.piedade)
+          );
+        }
+        if (typeof delta.tropas === "number") {
+          hud.tropas = Math.min(hud.maxTropas, Math.max(0, hud.tropas + delta.tropas));
+        }
+        if (typeof delta.estresse === "number") {
+          hud.estresse = Math.min(100, Math.max(0, hud.estresse + delta.estresse));
+        }
+      }
+
+      function mudarPainelReino(id) {
+        state.painelReino = id;
+        render();
+      }
+
+      function executarDecisao(id) {
+        const decisao = DECISOES.find((d) => d.id === id);
+        if (!decisao) return;
+        const custo = decisao.custo || 0;
+        if (custo > 0 && state.hud.ouro < custo) {
+          registrarEvento(
+            `Tesouro insuficiente para executar '${decisao.titulo}'. Reforce sua economia primeiro.`,
+            "alerta"
+          );
+          render();
+          return;
+        }
+        ajustarHud({ ...decisao.efeitos });
+        registrarEvento(decisao.textoSucesso, "sucesso");
+        render();
+      }
+
+      function limparEventos() {
+        state.eventos = [];
         render();
       }
 
@@ -687,6 +1042,26 @@
         if (desempenho >= 0.8) {
           state.revisao = state.revisao.filter((m) => m !== state.moduloAtivo);
         }
+        const bonusBase = { ouro: 40, prestigio: 55, piedade: 20, tropas: 80, estresse: -4 };
+        const ajustes = {
+          preparacao: { prestigio: 25, tropas: 60 },
+          fundamentos: { prestigio: 35 },
+          economia: { ouro: 120, prestigio: 15 },
+          guerra: { tropas: 260, prestigio: 60 },
+          intriga: { prestigio: 45 },
+          religiao: { piedade: 90, estresse: -6 },
+          dinastia: { prestigio: 80, piedade: 35 },
+        };
+        const bonus = { ...bonusBase };
+        const extra = ajustes[state.moduloAtivo] || {};
+        Object.entries(extra).forEach(([key, val]) => {
+          bonus[key] = (bonus[key] || 0) + val;
+        });
+        ajustarHud(bonus);
+        registrarEvento(
+          `${LESSONS[state.moduloAtivo].titulo} concluído com ${estrelas}★. Recursos do reino atualizados.`,
+          desempenho >= 0.8 ? "sucesso" : "info"
+        );
         state.tela = "modulo-concluido";
         render();
       }
@@ -716,24 +1091,79 @@
         }
       }
 
-      function renderHeader() {
+      function renderHudBar() {
+        if (state.tela === "boasvindas") return "";
+        const { ouro, prestigio, piedade, tropas, estresse, maxOuro, maxPrestigio, maxPiedade, maxTropas } =
+          state.hud;
+        const statusEstresse =
+          estresse < 25 ? "Tranquilo" : estresse < 55 ? "Atento" : estresse < 80 ? "Alerta" : "Limite";
+        return `
+          <div class="mt-4 grid gap-4 md:grid-cols-5">
+            <div class="hud-tile">
+              <div class="flex items-center justify-between">
+                <div class="text-xs uppercase tracking-wider text-white/70">Tesouro</div>
+                <div class="text-lg font-bold text-amber-300">${formatarNumero(ouro)}</div>
+              </div>
+              <div class="hud-meter"><span style="width: ${percentual(ouro, maxOuro)}%; background: linear-gradient(90deg, #fbbf24, #f97316);"></span></div>
+              <div class="mt-2 text-xs text-white/70">Capacidade ${formatarNumero(maxOuro)}</div>
+            </div>
+            <div class="hud-tile">
+              <div class="flex items-center justify-between">
+                <div class="text-xs uppercase tracking-wider text-white/70">Prestígio</div>
+                <div class="text-lg font-bold text-violet-200">${formatarNumero(prestigio)}</div>
+              </div>
+              <div class="hud-meter"><span style="width: ${percentual(prestigio, maxPrestigio)}%; background: linear-gradient(90deg, #a855f7, #6366f1);"></span></div>
+              <div class="mt-2 text-xs text-white/70">Próximo legado em ${formatarNumero(Math.max(0, maxPrestigio - prestigio))}</div>
+            </div>
+            <div class="hud-tile">
+              <div class="flex items-center justify-between">
+                <div class="text-xs uppercase tracking-wider text-white/70">Piedade</div>
+                <div class="text-lg font-bold text-sky-200">${formatarNumero(piedade)}</div>
+              </div>
+              <div class="hud-meter"><span style="width: ${percentual(piedade, maxPiedade)}%; background: linear-gradient(90deg, #38bdf8, #0ea5e9);"></span></div>
+              <div class="mt-2 text-xs text-white/70">Influência com o clero preservada</div>
+            </div>
+            <div class="hud-tile">
+              <div class="flex items-center justify-between">
+                <div class="text-xs uppercase tracking-wider text-white/70">Exércitos</div>
+                <div class="text-lg font-bold text-emerald-200">${formatarNumero(tropas)}</div>
+              </div>
+              <div class="hud-meter"><span style="width: ${percentual(tropas, maxTropas)}%; background: linear-gradient(90deg, #34d399, #10b981);"></span></div>
+              <div class="mt-2 text-xs text-white/70">Limite atual ${formatarNumero(maxTropas)}</div>
+            </div>
+            <div class="hud-tile">
+              <div class="flex items-center justify-between">
+                <div class="text-xs uppercase tracking-wider text-white/70">Estresse</div>
+                <div class="text-lg font-bold text-rose-200">${estresse}</div>
+              </div>
+              <div class="hud-meter"><span style="width: ${percentual(estresse, 100)}%; background: linear-gradient(90deg, #f87171, #ef4444);"></span></div>
+              <div class="mt-2 text-xs text-white/70">Estado: ${statusEstresse}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderHeader(showHud = true) {
         return `
           <header class="sticky top-0 z-10 fancy-gradient text-white px-6 py-4 shadow-xl shadow-indigo-500/20">
-            <div class="max-w-6xl mx-auto flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div class="flex items-center gap-3 text-lg font-semibold tracking-wide">
-                <span class="emoji-icon bg-white/20 rounded-xl p-2">🏰</span>
-                <span>Academia de Reis — Instrutor Mestre CK3</span>
-              </div>
-              <div class="flex flex-wrap gap-4 text-sm">
-                <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
-                  <span class="emoji-icon">⭐</span>
-                  <span>Nível: ${state.nivel ? state.nivel : "—"}</span>
+            <div class="max-w-6xl mx-auto">
+              <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div class="flex items-center gap-3 text-lg font-semibold tracking-wide">
+                  <span class="emoji-icon bg-white/20 rounded-xl p-2">🏰</span>
+                  <span>Academia de Reis — Instrutor Mestre CK3</span>
                 </div>
-                <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
-                  <span class="emoji-icon">🎯</span>
-                  <span>Dificuldade: ${state.dificuldade}</span>
+                <div class="flex flex-wrap gap-4 text-sm">
+                  <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
+                    <span class="emoji-icon">⭐</span>
+                    <span>Nível: ${state.nivel ? state.nivel : "—"}</span>
+                  </div>
+                  <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
+                    <span class="emoji-icon">🎯</span>
+                    <span>Dificuldade: ${state.dificuldade}</span>
+                  </div>
                 </div>
               </div>
+              ${showHud ? renderHudBar() : ""}
             </div>
           </header>
         `;
@@ -741,40 +1171,284 @@
 
       function renderBoasVindas() {
         return `
-          <div class="min-h-screen fancy-gradient text-white">
-            ${renderHeader()}
-            <main class="max-w-4xl mx-auto px-6 py-16 text-center">
-              <div class="mb-10 animate-bounce text-6xl">✨</div>
-              <h1 class="text-4xl md:text-5xl font-extrabold mb-4">
+          <div class="min-h-screen fancy-gradient text-white relative overflow-hidden">
+            <span class="floating-spark" style="top: 70%; left: 12%; animation-delay: 1s;"></span>
+            <span class="floating-spark" style="top: 55%; left: 45%; animation-delay: 2s;"></span>
+            <span class="floating-spark" style="top: 82%; left: 78%; animation-delay: 3s;"></span>
+            ${renderHeader(false)}
+            <main class="max-w-5xl mx-auto px-6 py-16 text-center">
+              <div class="mb-10">
+                <div class="mx-auto w-24 h-24 rounded-full bg-white/10 flex items-center justify-center text-5xl shadow-lg shadow-purple-500/50">
+                  ✨
+                </div>
+              </div>
+              <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
                 Bem-vindo à Academia de Reis
               </h1>
-              <p class="text-lg md:text-xl opacity-90">
-                Do primeiro clique ao domínio total de Crusader Kings 3. Método avançado,
-                prático e 100% em português.
+              <p class="text-lg md:text-xl text-white/90 max-w-3xl mx-auto">
+                Treine como um grande monarca: interface guiada, métodos avançados e a sensação de comandar um reino direto do navegador.
               </p>
               <div class="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
-                <button data-action="iniciar-diagnostico" class="px-6 py-3 rounded-2xl bg-yellow-400 text-indigo-900 font-bold shadow-lg shadow-yellow-500/40 hover:scale-105 transition">
+                <button data-action="iniciar-diagnostico" class="px-6 py-3 rounded-2xl bg-yellow-400 text-indigo-900 font-bold shadow-xl shadow-yellow-500/50 hover:scale-105 transition">
                   Iniciar Diagnóstico
                 </button>
-                <button data-action="ver-modulos" class="px-6 py-3 rounded-2xl border border-white/40 bg-white/10 hover:bg-white/20 transition">
-                  Ver Módulos
+                <button data-action="ver-modulos" class="px-6 py-3 rounded-2xl border border-white/30 bg-white/10 hover:bg-white/20 transition">
+                  Entrar na Sala de Guerra
                 </button>
               </div>
-              <div class="mt-12 glass-card rounded-3xl px-6 py-8 text-left text-white/90">
-                <div class="flex items-center gap-3 text-lg font-semibold mb-4">
-                  <span class="emoji-icon">❓</span>
-                  <span>Como funciona</span>
+              <div class="mt-14 grid gap-6 md:grid-cols-3 text-left">
+                <div class="glass-card rounded-3xl p-6">
+                  <div class="text-3xl">🧭</div>
+                  <h3 class="mt-3 text-lg font-semibold">Roteiro clica-a-clique</h3>
+                  <p class="text-sm text-white/80">Sequências precisas para navegar menus em PT-BR, com checkpoints automáticos.</p>
+                  <div class="mt-3 text-xs uppercase tracking-widest text-white/60">HUD dinástico</div>
+                  <div class="text-sm text-white/80">Interface inspirada no CK3, adaptada para estudo rápido.</div>
                 </div>
-                <ul class="list-disc ml-6 text-sm space-y-2">
-                  <li>Explique + mostre + peça ação (clique a clique).</li>
-                  <li>Filtros e botões com os nomes oficiais do jogo em PT-BR.</li>
-                  <li>Active recall ao final de cada módulo.</li>
-                  <li>Simulações de erros comuns com correções guiadas.</li>
-                  <li>Gating: novos módulos liberam após dominar os anteriores.</li>
-                </ul>
+                <div class="glass-card rounded-3xl p-6">
+                  <div class="text-3xl">🧠</div>
+                  <h3 class="mt-3 text-lg font-semibold">Prática adaptativa</h3>
+                  <p class="text-sm text-white/80">Quizzes inteligentes, simulações de erro e revisão guiada para fixar decisões.</p>
+                  <div class="mt-3 text-xs uppercase tracking-widest text-white/60">IA do instrutor</div>
+                  <div class="text-sm text-white/80">Dificuldade ajusta sozinha conforme seus acertos.</div>
+                </div>
+                <div class="glass-card rounded-3xl p-6">
+                  <div class="text-3xl">🏰</div>
+                  <h3 class="mt-3 text-lg font-semibold">Dinastia viva</h3>
+                  <p class="text-sm text-white/80">Casamentos genéticos, reformas de fé e contratos otimizados em listas prontas.</p>
+                  <div class="mt-3 text-xs uppercase tracking-widest text-white/60">Controle total</div>
+                  <div class="text-sm text-white/80">Painéis, decisões de corte e log de eventos em tempo real.</div>
+                </div>
+              </div>
+              <div class="mt-14 text-left">
+                <div class="holo-card p-6">
+                  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                    <div>
+                      <div class="text-xs uppercase tracking-widest text-white/60">Prévia do quartel-general</div>
+                      <h3 class="text-2xl font-semibold text-white">Painel estratégico interativo</h3>
+                      <p class="text-sm text-white/80 max-w-xl">Assim que iniciar, você ganha acesso ao HUD dinástico com recursos, decisões rápidas e eventos que respondem às suas escolhas.</p>
+                    </div>
+                    <div class="grid gap-3 text-left md:w-72">
+                      <div class="hud-tile">
+                        <div class="flex items-center justify-between text-sm">
+                          <span class="text-white/70">Tesouro previsto</span>
+                          <span class="text-yellow-300 font-semibold">280</span>
+                        </div>
+                        <div class="hud-meter"><span style="width: 65%; background: linear-gradient(90deg, #fbbf24, #f97316);"></span></div>
+                        <div class="mt-2 text-xs text-white/60">Reserve ouro antes das campanhas</div>
+                      </div>
+                      <div class="hud-tile">
+                        <div class="flex items-center justify-between text-sm">
+                          <span class="text-white/70">Próxima decisão</span>
+                          <span class="text-purple-200 font-semibold">Conselho de Estratégia</span>
+                        </div>
+                        <div class="hud-meter"><span style="width: 80%; background: linear-gradient(90deg, #a855f7, #6366f1);"></span></div>
+                        <div class="mt-2 text-xs text-white/60">Melhore contratos e claims</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </main>
           </div>
+        `;
+      }
+
+      function renderPainelReino() {
+        const tabs = PAINEL_TABS.map(
+          (tab) => `
+            <button data-action="mudar-painel" data-painel="${tab.id}" class="tab-button" data-active="${
+              state.painelReino === tab.id
+            }">
+              <span>${tab.emoji}</span>
+              <span>${tab.titulo}</span>
+            </button>
+          `
+        ).join(" ");
+
+        const concluidos = Object.values(state.progresso).filter((p) => p?.feito).length;
+        const totalEstrelas = Object.values(state.progresso).reduce(
+          (acc, cur) => acc + (cur?.estrelas || 0),
+          0
+        );
+        const mediaEstrelas = concluidos ? (totalEstrelas / concluidos).toFixed(1) : "0.0";
+        const proximoModulo = MODULOS.find((m) => !state.progresso[m.id]?.feito);
+        const proximoNome = proximoModulo ? LESSONS[proximoModulo.id].titulo : "Todos concluídos";
+        const progressoPercentual = Math.round((concluidos / MODULOS.length) * 100);
+
+        let conteudo = "";
+        if (state.painelReino === "status") {
+          conteudo = `
+            <div class="grid gap-4 md:grid-cols-3 text-white/90">
+              <div class="intel-card">
+                <div class="text-xs uppercase tracking-widest text-sky-200/80">Progresso geral</div>
+                <div class="text-2xl font-semibold">${concluidos}/${MODULOS.length} módulos</div>
+                <p class="text-sm text-slate-200/80">Conclusão ${progressoPercentual}% do plano mestre.</p>
+              </div>
+              <div class="intel-card">
+                <div class="text-xs uppercase tracking-widest text-emerald-200/80">Qualidade</div>
+                <div class="text-2xl font-semibold">${mediaEstrelas} ★</div>
+                <p class="text-sm text-slate-200/80">Média das estrelas obtidas por módulo concluído.</p>
+              </div>
+              <div class="intel-card">
+                <div class="text-xs uppercase tracking-widest text-fuchsia-200/80">Próxima prioridade</div>
+                <div class="text-lg font-semibold">${proximoNome}</div>
+                <p class="text-sm text-slate-200/80">Desbloqueia novos painéis e decisões especiais.</p>
+              </div>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2 text-white/90">
+              <div class="intel-card">
+                <strong>Revisões pendentes:</strong>
+                <p class="text-sm mt-1">${
+                  state.revisao.length
+                    ? `${state.revisao.length} módulo(s) aguardando reforço.`
+                    : "Nenhuma revisão necessária. Continue avançando!"
+                }</p>
+              </div>
+              <div class="intel-card">
+                <strong>Eventos recentes:</strong>
+                <p class="text-sm mt-1">${state.eventos[0]?.texto || "Complete um módulo para gerar relatórios dinásticos."}</p>
+              </div>
+            </div>
+          `;
+        } else if (state.painelReino === "economia") {
+          const receita = Math.round(state.hud.ouro / 12) + 18;
+          const manutencao = Math.round(state.hud.tropas / 75) + 25;
+          conteudo = `
+            <div class="grid gap-4 md:grid-cols-3 text-white/90">
+              <div class="intel-card">
+                <div class="text-xs uppercase tracking-widest text-amber-200/80">Receita mensal</div>
+                <div class="text-2xl font-semibold">${formatarNumero(receita)} ouro</div>
+                <p class="text-sm text-slate-200/80">Estimativa com base em impostos atuais e contratos revisados.</p>
+              </div>
+              <div class="intel-card">
+                <div class="text-xs uppercase tracking-widest text-rose-200/80">Manutenção militar</div>
+                <div class="text-2xl font-semibold">${formatarNumero(manutencao)} ouro</div>
+                <p class="text-sm text-slate-200/80">Inclui homens de armas, campeões e guardas pessoais.</p>
+              </div>
+              <div class="intel-card">
+                <div class="text-xs uppercase tracking-widest text-emerald-200/80">Projetos ativos</div>
+                <div class="text-lg font-semibold">${
+                  state.progresso.economia?.feito ? "Construções avançadas liberadas" : "Economia básica em curso"
+                }</div>
+                <p class="text-sm text-slate-200/80">Gerencie fazendas, portos e tributos urbanos para crescer.</p>
+              </div>
+            </div>
+            <div class="intel-card text-white/90">
+              <strong>Recomendações do conselho:</strong>
+              <ul class="list-disc ml-5 text-sm mt-2 space-y-1">
+                <li>Finalize ao menos um prédio econômico antes de declarar novas guerras.</li>
+                <li>Ajuste contratos com ganchos obtidos em Intriga para reforçar o tesouro.</li>
+                <li>Mantenha ${formatarNumero(Math.max(200, state.hud.ouro))} de ouro reservado para emergências.</li>
+              </ul>
+            </div>
+          `;
+        } else {
+          const aliados = ALIADOS.map(
+            (aliado) => `
+              <div class="flex items-start gap-3">
+                <div class="text-2xl">${aliado.powerUp ? "✨" : "🤝"}</div>
+                <div>
+                  <div class="font-semibold text-white">${aliado.nome}</div>
+                  <div class="text-xs text-white/70 uppercase tracking-widest">${aliado.relacao} · Força ${aliado.poder}</div>
+                  <p class="text-sm text-white/80">${aliado.comentario}</p>
+                </div>
+              </div>
+            `
+          ).join("<hr class='border-white/10 my-3' />");
+
+          const rumores = RUMORES.map((rumor) => `<li>${rumor}</li>`).join("");
+
+          conteudo = `
+            <div class="grid gap-4 md:grid-cols-2 text-white/90">
+              <div class="intel-card space-y-3">
+                <div class="text-xs uppercase tracking-widest text-emerald-200/80">Rede de aliados</div>
+                ${aliados}
+              </div>
+              <div class="intel-card">
+                <div class="text-xs uppercase tracking-widest text-sky-200/80">Rumores e intrigas</div>
+                <ul class="list-disc ml-4 text-sm space-y-2 mt-2">${rumores}</ul>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <section class="holo-card p-6 space-y-6 relative overflow-hidden">
+            <div class="flex flex-wrap gap-3">${tabs}</div>
+            ${conteudo}
+          </section>
+        `;
+      }
+
+      function renderDecisionConsole() {
+        const cards = DECISOES.map((decisao) => {
+          const bloqueado = decisao.custo > 0 && state.hud.ouro < decisao.custo;
+          return `
+            <div class="glass-card rounded-3xl p-5 space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="text-3xl">${decisao.emoji}</div>
+                <span class="text-xs uppercase tracking-widest text-slate-500">${
+                  decisao.custo > 0
+                    ? `Custo: ${formatarNumero(decisao.custo)} ouro`
+                    : "Sem custo imediato"
+                }</span>
+              </div>
+              <h4 class="text-lg font-semibold text-slate-900">${decisao.titulo}</h4>
+              <p class="text-sm text-slate-600">${decisao.descricao}</p>
+              <button data-action="executar-decisao" data-decisao="${decisao.id}" class="decision-button" ${
+                bloqueado ? "disabled" : ""
+              }>
+                <span>⚡</span>
+                <span>${bloqueado ? "Ouro insuficiente" : "Executar decisão"}</span>
+              </button>
+            </div>
+          `;
+        }).join("");
+
+        return `
+          <section class="glass-card rounded-3xl p-6 space-y-4">
+            <div class="flex items-center gap-3">
+              <span class="emoji-icon">🗡️</span>
+              <div>
+                <h3 class="text-lg font-bold text-slate-900">Mesa de decisões rápidas</h3>
+                <p class="text-sm text-slate-600">Gaste ouro, prestígio ou piedade para obter bônus imediatos.</p>
+              </div>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">${cards}</div>
+          </section>
+        `;
+      }
+
+      function renderEventFeed() {
+        const eventos = state.eventos.length
+          ? state.eventos
+              .map(
+                (evt) => `
+                  <div class="event-entry" data-type="${evt.tipo}">
+                    <div class="text-xs text-slate-500">${evt.tempo}</div>
+                    <div class="text-sm font-semibold">${evt.texto}</div>
+                  </div>
+                `
+              )
+              .join("")
+          : '<p class="text-sm text-slate-600">Sem eventos recentes — conclua lições ou decisões para movimentar o reino.</p>';
+
+        return `
+          <section class="glass-card rounded-3xl p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="emoji-icon">📜</span>
+                <div>
+                  <h3 class="text-lg font-bold text-slate-900">Relatórios da corte</h3>
+                  <p class="text-sm text-slate-600">Registro vivo das suas decisões e resultados de módulos.</p>
+                </div>
+              </div>
+              <button data-action="limpar-eventos" class="text-xs uppercase tracking-widest text-indigo-500 hover:text-indigo-700">
+                Limpar
+              </button>
+            </div>
+            <div class="space-y-3 max-h-80 overflow-auto pr-1">${eventos}</div>
+          </section>
         `;
       }
 
@@ -901,26 +1575,35 @@
               <section class="grid gap-6 md:grid-cols-3">
                 ${cards}
               </section>
-              <section class="glass-card rounded-3xl p-6">
-                <div class="flex items-center gap-3 mb-4">
-                  <span class="emoji-icon">🛡️</span>
-                  <div>
-                    <h3 class="text-lg font-bold text-slate-900">Revisão adaptativa</h3>
-                    <p class="text-sm text-slate-600">Módulos que ficaram abaixo de 80% aparecem aqui.</p>
-                  </div>
+              <div class="grid gap-6 lg:grid-cols-[2fr_1fr]">
+                <div class="space-y-6">
+                  ${renderPainelReino()}
+                  ${renderDecisionConsole()}
+                  <section class="glass-card rounded-3xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                      <span class="emoji-icon">🛡️</span>
+                      <div>
+                        <h3 class="text-lg font-bold text-slate-900">Revisão adaptativa</h3>
+                        <p class="text-sm text-slate-600">Módulos abaixo de 80% retornam aqui para reforço.</p>
+                      </div>
+                    </div>
+                    <div class="grid gap-3 md:grid-cols-2">${revisoes}</div>
+                  </section>
                 </div>
-                <div class="grid gap-3 md:grid-cols-2">${revisoes}</div>
-              </section>
-              <section class="glass-card rounded-3xl p-6">
-                <div class="flex items-center gap-3 mb-4">
-                  <span class="emoji-icon">🗂️</span>
-                  <div>
-                    <h3 class="text-lg font-bold text-slate-900">Checkpoints de mestre</h3>
-                    <p class="text-sm text-slate-600">Metas para revisar seu progresso dinástico.</p>
-                  </div>
+                <div class="space-y-6">
+                  ${renderEventFeed()}
+                  <section class="glass-card rounded-3xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                      <span class="emoji-icon">🗂️</span>
+                      <div>
+                        <h3 class="text-lg font-bold text-slate-900">Checkpoints de mestre</h3>
+                        <p class="text-sm text-slate-600">Metas para acompanhar a expansão dinástica.</p>
+                      </div>
+                    </div>
+                    <div class="grid gap-4 md:grid-cols-1">${checkpoints}</div>
+                  </section>
                 </div>
-                <div class="grid gap-4 md:grid-cols-3">${checkpoints}</div>
-              </section>
+              </div>
             </main>
           </div>
         `;
@@ -1150,6 +1833,8 @@
             const action = event.currentTarget.dataset.action;
             const index = parseInt(event.currentTarget.dataset.index, 10);
             const modulo = event.currentTarget.dataset.modulo;
+            const painel = event.currentTarget.dataset.painel;
+            const decisao = event.currentTarget.dataset.decisao;
             switch (action) {
               case "iniciar-diagnostico":
                 iniciarDiagnostico();
@@ -1189,6 +1874,15 @@
                 break;
               case "refazer-modulo":
                 abrirModulo(state.moduloAtivo);
+                break;
+              case "mudar-painel":
+                if (painel) mudarPainelReino(painel);
+                break;
+              case "executar-decisao":
+                if (decisao) executarDecisao(decisao);
+                break;
+              case "limpar-eventos":
+                limparEventos();
                 break;
               default:
                 break;

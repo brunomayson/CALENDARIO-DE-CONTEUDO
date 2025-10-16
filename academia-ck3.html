@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Academia de Reis — Instrutor Mestre CK3</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        min-height: 100%;
+        background: radial-gradient(circle at top left, #ede9fe, #f5f3ff 40%,
+            #f8fafc);
+      }
+
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(79, 70, 229, 0.6) rgba(99, 102, 241, 0.12);
+      }
+
+      *::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+
+      *::-webkit-scrollbar-track {
+        background: rgba(99, 102, 241, 0.08);
+      }
+
+      *::-webkit-scrollbar-thumb {
+        background: linear-gradient(
+          180deg,
+          rgba(99, 102, 241, 0.9),
+          rgba(129, 140, 248, 0.8)
+        );
+        border-radius: 9999px;
+      }
+
+      .glass-card {
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+      }
+    </style>
+  </head>
+  <body class="min-h-full bg-transparent text-slate-900">
+    <div id="root" class="min-h-full"></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+    ></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/lucide-react@0.344.0/dist/lucide-react.umd.js"
+    ></script>
+
+    <script type="text/babel">
+      const { useEffect, useMemo, useState } = React;
+      const {
+        Trophy,
+        Brain,
+        Castle,
+        Shield,
+        Swords,
+        Scroll,
+        HeartHandshake,
+        Crown,
+        Network,
+        Building,
+        Settings,
+        Target,
+        CheckCircle2,
+        XCircle,
+        ArrowRight,
+        ArrowLeft,
+        Sparkles,
+        BookOpen,
+        AlertTriangle,
+        Star,
+        HelpCircle,
+        Layers,
+        Lock,
+        Unlock,
+        Sword,
+        Banknote,
+        Church,
+        Users,
+        Coins,
+        Hammer,
+        ShieldQuestion,
+      } = lucideReact;
+
+      const Tag = ({ children }) => (
+        <span
+          className="inline-flex items-center gap-1 rounded-full bg-indigo-50 text-indigo-700 px-3 py-1 text-xs font-semibold border border-indigo-200 shadow-sm"
+        >
+          {children}
+        </span>
+      );
+
+      const Pill = ({ children }) => (
+        <span
+          className="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-medium border border-slate-200"
+        >
+          {children}
+        </span>
+      );
+
+      const Card = ({ children, className = "" }) => (
+        <div className={`glass-card rounded-3xl shadow-xl shadow-indigo-100/70 p-6 ${className}`}>
+          {children}
+        </div>
+      );
+
+      const SectionTitle = ({ icon: Icon, title, subtitle }) => (
+        <div className="flex items-start sm:items-center gap-3 mb-5">
+          {Icon && (
+            <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-rose-500 text-white shadow-lg shadow-indigo-200/80">
+              <Icon className="w-5 h-5" />
+            </div>
+          )}
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 leading-tight">{title}</h3>
+            {subtitle && <p className="text-sm text-slate-500 leading-snug">{subtitle}</p>}
+          </div>
+        </div>
+      );
+
+      const LESSONS = {
+        preparacao: {
+          titulo: "Preparação Inicial",
+          icone: Settings,
+          passos: [
+            {
+              titulo: "Abrir cenário recomendado (1066 – William da Normandia)",
+              acao: [
+                "Abrir o jogo → Um Jogador",
+                "Escolher data 1066 → Personagens Destacados → William da Normandia",
+                "Clique em Iniciar Jogo",
+              ],
+              dica:
+                "William começa com claims fortes e guerra inicial — excelente para aprender guerra, vassalos e sucessão rapidamente.",
+            },
+            {
+              titulo: "Configurar interface e controles",
+              acao: [
+                "Menu Esc → Configurações → Interface → ativar 'Dicas detalhadas' e 'Mostrar teclas de atalho'",
+                "Controles: Barra de espaço pausa/despausa; 1–5 controla velocidade",
+                "Vídeo: modo 'Janela sem bordas' (estável em MacBook M1)",
+              ],
+              dica:
+                "Dominar pausa/despausa e velocidade é metade do jogo: pausar para planejar, rodar no 2–3 para executar e 4–5 para viajar.",
+            },
+            {
+              titulo: "Mentalidade do jogador",
+              acao: [
+                "Você é Governante (recursos), Estrategista (guerras) e Contador de Histórias (dinastia)",
+                "Sempre planeje 2 gerações à frente: herdeiro + neto",
+              ],
+              dica: "CK3 premia planejamento dinástico e escolhas com consequências (Estresse, contratos, fé).",
+            },
+          ],
+          checklist: [
+            "Dicas detalhadas ativadas",
+            "Velocidade testada (1–5) e pausa no espaço",
+            "Cenário 1066 carregado",
+          ],
+        },
+        fundamentos: {
+          titulo: "Fundamentos: Títulos e Vassalos",
+          icone: Crown,
+          passos: [
+            {
+              titulo: "Ver seus títulos",
+              acao: [
+                "Clique no SEU retrato (canto inferior esquerdo) → Aba 'Títulos'",
+                "Observe Reino, Ducados e Condados possuídos",
+              ],
+              dica:
+                "Reinos > Ducados > Condados. Quanto maior o título, maior o prestígio e a complexidade na sucessão.",
+            },
+            {
+              titulo: "Vassalos e opinião",
+              acao: [
+                "No painel do personagem → 'Vassalos'",
+                "Ordene por Opinião (verde bom, vermelho perigoso)",
+              ],
+              dica:
+                "Opinião baixa gera Facções. Use presentes, cargos e contratos para estabilizar.",
+            },
+            {
+              titulo: "Modificar Contrato Feudal (hack de escutagem)",
+              acao: [
+                "Clique em um vassalo feudal → 'Modificar contrato feudal'",
+                "Aumente Impostos e reduza Tropas (Cláusula 'Escudagem' se disponível)",
+              ],
+              dica:
+                "Mais ouro agora para acelerar economia. Compense tropa com Homens de Armas e mercenários.",
+            },
+            {
+              titulo: "Casar o herdeiro (traços herdáveis)",
+              acao: [
+                "Clique no seu herdeiro → 'Casar' → 'Encontrar cônjuge'",
+                "Filtros: 'Traços herdáveis' (Inteligente, Bonita, Excelente, Robustez, etc.), 'Não casado'",
+                "Ordenar por Alianças, aceitar noiva com traço herdável",
+              ],
+              dica:
+                "Genética vence guerras silenciosas. Traços fortes + boas alianças = décadas de vantagem.",
+            },
+          ],
+          checklist: [
+            "Top 3 vassalos com opinião ≥ +20",
+            "1 contrato otimizado (mais ouro)",
+            "Herdeiro noivo(a) com traço herdável",
+          ],
+        },
+        economia: {
+          titulo: "Economia e Territórios",
+          icone: Building,
+          passos: [
+            {
+              titulo: "Construções iniciais",
+              acao: [
+                "Clique na sua capital (Condado) → 'Edifícios'",
+                "Priorize 'Fazenda & Campos' / prédios econômicos",
+              ],
+              dica: "Retorno seguro. Cada prédio econômico acelera todas as outras áreas.",
+            },
+            {
+              titulo: "Controle e Desenvolvimento",
+              acao: [
+                "Conselho → Marechal → Tarefa 'Aumentar controle no condado' nas províncias instáveis",
+                "Conselho → Administrador (Administrador/Economato) → 'Aumentar desenvolvimento no condado' na capital",
+              ],
+              dica:
+                "Controle ≥ 90 e desenvolvimento crescente na capital multiplicam impostos e tropas.",
+            },
+            {
+              titulo: "Reserva de Ouro",
+              acao: ["Mantenha ≥ 200 de ouro antes de guerras"],
+              dica:
+                "Reserva cobre mercenários e eventos. Evita falência e revolta quando algo dá errado.",
+            },
+          ],
+          checklist: [
+            "1 prédio econômico em construção",
+            "Controle ≥ 90 em províncias principais",
+            "≥ 200 de ouro em caixa",
+          ],
+        },
+
+        guerra: {
+          titulo: \"Guerra e Exércitos\",
+          icone: Swords,
+          passos: [
+            {
+              titulo: \"Escolher alvo fraco\",
+              acao: [
+                \"Clique no vizinho alvo → Botão 'Declarar guerra'\",
+                \"Casus Belli: 'Conquista de condado' para guerras rápidas\",
+              ],
+              dica:
+                \"Evite múltiplas frentes. Picos de vantagem em terreno e Homens de Armas decidem batalhas.\",
+            },
+            {
+              titulo: \"Levantar e dividir exércitos\",
+              acao: [
+                \"Aba 'Militar' → 'Levantar todos os exércitos'\",
+                \"Clique no exército → 'Dividir ao meio'\",
+                \"Posicione metade em montanhas/colinas (defesa) e a outra para cercos\",
+              ],
+              dica:
+                \"Defender em terreno difícil reduz largura de combate e maximiza valor dos Homens de Armas.\",
+            },
+            {
+              titulo: \"Hack de mercenários\",
+              acao: [
+                \"Antes da guerra: contrate mercenários baratos por 3 anos\",
+                \"Inicie a guerra com superioridade tática\",
+              ],
+              dica: \"Compra tempo e vitórias no início. Ouro vira território.\",
+            },
+            {
+              titulo: \"Simulação de Erro: suprimento\",
+              acao: [
+                \"Ataque sem suprimento e observe penalidades\",
+                \"Repetir agora com suprimento cheio para contrastar\",
+              ],
+              dica:
+                \"Exército sem suprimento sofre atrito e perde vantagem — derrota anunciada.\",
+            },
+          ],
+          checklist: [
+            \"Homens de Armas alinhados ao terreno local\",
+            \"General com melhor perícia\",
+            \"Linha de suprimento intacta\",
+          ],
+        },
+
+        intriga: {
+          titulo: \"Intriga e Segredos\",
+          icone: Brain,
+          passos: [
+            {
+              titulo: \"Esquemas\",
+              acao: [
+                \"Aba 'Intriga' → 'Assassinato' ou 'Fabricar gancho' conforme alvo\",
+                \"Escolha alvo com baixa segurança e recrute cúmplices\",
+              ],
+              dica:
+                \"Dois slots de esquemas (com Perks certos) facilitam jogadas paralelas.\",
+            },
+            {
+              titulo: \"Segredos e Ganchos\",
+              acao: [
+                \"Aba 'Segredos' → selecione um segredo contra vassalo\",
+                \"Use 'Chantagear por Gancho' → depois 'Modificar contrato' sem custo\",
+              ],
+              dica:
+                \"Gancho é moeda. Use para impostos extras ou obrigações religiosas/políticas.\",
+            },
+            {
+              titulo: \"Hack avançado: sequestro\",
+              acao: [
+                \"Com Perk apropriado, use 'Rapto' para capturar alvo-chave (herdeiro/líder de facção)\",
+              ],
+              dica:
+                \"Prender o pivô desmonta facções e negocia paz em seus termos.\",
+            },
+          ],
+          checklist: [
+            \"1 gancho valioso obtido\",
+            \"1 contrato melhorado via gancho\",
+            \"Rede de cúmplices ≥ 2 em esquema crítico\",
+          ],
+        },
+
+        religiao: {
+          titulo: \"Religião e Cultura\",
+          icone: Church,
+          passos: [
+            {
+              titulo: \"Criar/Modificar Fé (uso estratégico)\",
+              acao: [
+                \"Aba 'Religião' → 'Criar nova fé'\",
+                \"Tenetes prioritários: Poligamia, Divórcio permitido (conforme objetivo)\",
+              ],
+              dica:
+                \"Mais casamentos = mais alianças e genética. Divergências afetam Hostilidade Religiosa e guerras santas.\",
+            },
+            {
+              titulo: \"Cultura e Inovações\",
+              acao: [
+                \"Aba 'Cultura' → 'Inovações'\",
+                \"Apoie o Chefe Cultural e considere casamentos com culturas avançadas\",
+              ],
+              dica:
+                \"Troca cultural acelera tecnologias-chave (cavalaria, cerco, contratos).\",
+            },
+          ],
+          checklist: [
+            \"Tenete-chave ativo\",
+            \"1 aliança cultural vantajosa\",
+            \"Progresso de inovação monitorado\",
+          ],
+        },
+
+        dinastia: {
+          titulo: \"Dinastia, Sucessão e Reconhecimento\",
+          icone: Network,
+          passos: [
+            {
+              titulo: \"Legados Dinásticos\",
+              acao: [
+                \"Aba 'Dinastia' → 'Legados'\",
+                \"Priorize 'Jurídico' (contratos) e 'Guerra' (bônus militares)\",
+              ],
+              dica:
+                \"Legados persistem entre gerações — potência composta da sua família.\",
+            },
+            {
+              titulo: \"Amantes, Casamentos e Genética\",
+              acao: [
+                \"Estilo de Vida 'Sedução' → 'Seduzir' em alvo com bons traços\",
+                \"'Amantes' no painel do personagem para gerenciar relações\",
+                \"Religiões com Poligamia → multiplique alianças e descendência\",
+              ],
+              dica:
+                \"Filhos ilegítimos podem ser legitimados dependendo da fé/leis. Controle a sucessão com alianças e traços.\",
+            },
+            {
+              titulo: \"Sucessão\",
+              acao: [
+                \"Clique no 'Reino' → 'Sucessão'\",
+                \"Analise divisão prevista e ajuste matrimônios/pressões de reivindicação\",
+              ],
+              dica:
+                \"Planeje para o herdeiro herdar o núcleo e reconquistar o resto rapidamente.\",
+            },
+            {
+              titulo: \"Gestão de Facções\",
+              acao: [\"Aba 'Facções' → identifique líder → suborne, negocie ou prenda\"],
+              dica: \"Quebre a liderança da facção para esvaziá-la.\",
+            },
+          ],
+          checklist: [
+            \"2 legados comprados até ano 50\",
+            \"Herdeiro com traço herdável\",
+            \"Facções com força < 80%\",
+          ],
+        },
+      };
+
+
+      const QUIZ = {
+        diagnostico: [
+          {
+            q: \"Qual é a ordem hierárquica correta dos títulos?\",
+            a: [
+              \"Condado → Ducado → Reino\",
+              \"Reino → Ducado → Condado\",
+              \"Ducado → Reino → Condado\",
+              \"Condado → Reino → Ducado\",
+            ],
+            c: 0,
+            exp: \"A base é o Condado; acima dele está o Ducado; no topo, o Reino/Império.\",
+          },
+          {
+            q: \"Ao modificar um contrato feudal para aumentar impostos e reduzir tropas, você está priorizando…\",
+            a: [\"Lealdade\", \"Renda imediata\", \"Prestígio\", \"Piedade\"],
+            c: 1,
+            exp: \"Escudagem converte dever militar em ouro. Ótimo para snowball econômico.\",
+          },
+          {
+            q: \"Qual terreno favorece exércitos menores e fortes?\",
+            a: [\"Planícies\", \"Terreno urbano\", \"Montanhas/Pântanos\", \"Costa\"],
+            c: 2,
+            exp: \"Terrenos ásperos reduzem largura de combate, valorizando Homens de Armas.\",
+          },
+          {
+            q: \"Qual aba você usa para 'Aumentar controle no condado'?\",
+            a: [\"Militar\", \"Conselho (Marechal)\", \"Decisões\", \"Corte\"],
+            c: 1,
+            exp: \"A tarefa é do Marechal, essencial para estabilidade tributária e militar.\",
+          },
+          {
+            q: \"Em casamentos estratégicos do herdeiro, o filtro mais valioso a longo prazo é:\",
+            a: [\"Alianças\", \"Traços herdáveis\", \"Idade\", \"Dinheiro\"],
+            c: 1,
+            exp: \"Traços herdáveis multiplicam valor por gerações; alianças vêm junto muitas vezes.\",
+          },
+        ],
+        fundamentos: [
+          {
+            q: \"Onde você vê os seus títulos e seus vassalos principais?\",
+            a: [\"Aba Militar\", \"Retrato do governante\", \"Mapa de decisões\", \"Painel de reino (tecla F7)\"],
+            c: 1,
+            exp: \"Clique no retrato para Títulos e Vassalos. É o hub do governante.\",
+          },
+          {
+            q: \"O que fazer com um vassalo poderoso e opinião -40?\",
+            a: [\"Ignorar\", \"Convidar para o Conselho ou melhorar contrato/relacionamento\", \"Revogar título imediatamente\", \"Declarar guerra\"],
+            c: 1,
+            exp: \"Poderosos preferem cargos. Alternativas: presentes, casamento, contrato.\",
+          },
+        ],
+        economia: [
+          {
+            q: \"Primeiro prédio recomendado ao início em capital fértil:\",
+            a: [\"Quartéis pesados\", \"Fazenda & Campos / produção de ouro\", \"Erguimento de muralhas máximas\", \"Igreja\"],
+            c: 1,
+            exp: \"Econômicos geram efeito composto. Muralhas surgem depois.\",
+          },
+          {
+            q: \"Controle abaixo de 50% resulta em:\",
+            a: [\"Mais impostos\", \"Menos impostos e risco de revoltas\", \"Nada muda\", \"Bônus de levies\"],
+            c: 1,
+            exp: \"Baixo controle drena renda e levies; aumente com o Marechal.\",
+          },
+        ],
+        guerra: [
+          {
+            q: \"Por que dividir o exército ao meio ao iniciar uma guerra?\",
+            a: [
+              \"Para confundir o inimigo\",
+              \"Para defender com metade e cercar com a outra\",
+              \"Para economizar ouro\",
+              \"Para ganhar prestígio\",
+            ],
+            c: 1,
+            exp: \"Uma pilha segura posição/defesa; outra avança nos cercos com proteção.\",
+          },
+          {
+            q: \"Qual erro letal comum em campanhas longas?\",
+            a: [\"Levar artilharia demais\", \"Ignorar suprimento/atração\", \"Trocar generais\", \"Usar cerco\"],
+            c: 1,
+            exp: \"Sem suprimento, seu exército se desfaz e perde moral rapidamente.\",
+          },
+        ],
+
+        intriga: [
+          {
+            q: \"Como transformar um segredo em vantagem econômica/política?\",
+            a: [\"Executar o alvo\", \"Vender o segredo\", \"Chantagear por Gancho e usar em contrato/decisão\", \"Ignorar\"],
+            c: 2,
+            exp: \"Gancho permite contrato sem custo, casamento forçado, pagamentos e favores.\",
+          },
+          {
+            q: \"Por que 'Rapto' (Abdução) é poderoso?\",
+            a: [\"Aumenta impostos\", \"Captura alvos-chave e desmonta facções\", \"Muda cultura\", \"Reforma a fé\"],
+            c: 1,
+            exp: \"Sem líder/pretendente, a facção colapsa; abre negociações.\",
+          },
+        ],
+        religiao: [
+          {
+            q: \"Qual combinação favorece crescimento dinástico e alianças?\",
+            a: [
+              \"Monogamia e divórcio proibido\",
+              \"Poligamia e divórcio permitido\",
+              \"Celibato obrigatório\",
+              \"Proibição de dotes\",
+            ],
+            c: 1,
+            exp: \"Mais casamentos = mais alianças e mais filhos para moldagem genética.\",
+          },
+          {
+            q: \"Hostilidade Religiosa afeta…\",
+            a: [
+              \"Somente opinião\",
+              \"Opinião, casamentos e guerras santas entre fés\",
+              \"Apenas dotes\",
+              \"Apenas tributos\",
+            ],
+            c: 1,
+            exp: \"Classificações (Reta/Desviada/Hostil/Maligna) impactam casamentos e CBs.\",
+          },
+        ],
+        dinastia: [
+          {
+            q: \"Qual prioridade de legado acelera contratos e economia?\",
+            a: [\"Glória\", \"Jurídico\", \"Sangue\", \"Erudição\"],
+            c: 1,
+            exp: \"Jurídico abre espaço para contratos melhores e mais controle dos vassalos.\",
+          },
+          {
+            q: \"Por que planejar 2 gerações à frente?\",
+            a: [
+              \"Para ter mais eventos\",
+              \"Para garantir herdeiros com traços e alianças, mantendo o núcleo do reino\",
+              \"Porque o jogo exige\",
+              \"Para ganhar uma conquista secreta\",
+            ],
+            c: 1,
+            exp:
+              \"Combina genética, matrimônios e leis para manter/expandir poder ao sucessor.\",
+          },
+        ],
+      };
+
+
+      const ERROR_SIMULATIONS = {
+        guerra_sem_suprimento: {
+          titulo: \"Erro Simulado: Guerra sem Suprimento\",
+          passos: [
+            \"Levante exércitos e marche por longas distâncias sem parar (observe ícone de suprimento em vermelho)\",
+            \"Ataque uma pilha inimiga em montanhas com suprimento baixo\",
+            \"Observe perda de moral/atrition → derrota\",
+            \"Refaça mantendo exército abastecido (paradas) e atraindo o inimigo para seu terreno\",
+          ],
+        },
+        casamento_ruim: {
+          titulo: \"Erro Simulado: Herdeiro sem Traços Herdáveis\",
+          passos: [
+            \"Case o herdeiro com alvo sem traços/alianças relevantes\",
+            \"Prossiga 5–10 anos e compare filhos e política\",
+            \"Refaça o casamento com filtros de traços (Inteligente, Bonita, Excelente) + boas alianças\",
+          ],
+        },
+        guerra_sem_ouro: {
+          titulo: \"Erro Simulado: Declarar Guerra sem Reserva de Ouro\",
+          passos: [
+            \"Entre em guerra com < 100 de ouro\",
+            \"Veja eventos de dívida, moral baixa de mercenários, risco de facções\",
+            \"Recomece com ≥ 200 de ouro e contrate mercenários baratos antes da declaração\",
+          ],
+        },
+      };
+
+      const CHECKPOINTS = [
+        {
+          tempo: \"Ano 10\",
+          metas: [
+            \"2 alianças\",
+            \"1 casamento genético em andamento\",
+            \"Contrato melhorado com 1 vassalo\",
+          ],
+        },
+        {
+          tempo: \"Ano 25\",
+          metas: [
+            \"500 de ouro de reserva\",
+            \"Facções sob 80% de força\",
+            \"Capital com desenvolvimento em alta\",
+          ],
+        },
+        {
+          tempo: \"Ano 50\",
+          metas: [
+            \"2 legados dinásticos\",
+            \"Herdeiro com traço herdável de nível 2+\",
+            \"Exército profissional consolidado\",
+          ],
+        },
+      ];
+
+
+      const ProgressBar = ({ value, max = 100 }) => (
+        <div className=\"w-full h-2.5 bg-slate-200 rounded-full overflow-hidden\">
+          <div
+            className=\"h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 transition-all duration-500\"
+            style={{ width: `${Math.min(100, (value / max) * 100)}%` }}
+          />
+        </div>
+      );
+
+      function AcademiaCK3() {
+        const [tela, setTela] = useState(\"boasvindas\");
+        const [moduloAtivo, setModuloAtivo] = useState(null);
+        const [passo, setPasso] = useState(0);
+        const [progresso, setProgresso] = useState({});
+        const [nivel, setNivel] = useState(null);
+        const [diagnostico, setDiagnostico] = useState({ i: 0, acertos: 0, respostas: [] });
+        const [quiz, setQuiz] = useState({ i: 0, acertos: 0, resp: null, feedback: null });
+        const [dificuldade, setDificuldade] = useState(\"media\");
+        const [revisaoPendente, setRevisaoPendente] = useState([]);
+
+        const MODULOS = useMemo(
+          () => [
+            { id: \"preparacao\", nome: \"Preparação\", icone: Settings, cor: \"from-indigo-500 to-purple-600\" },
+            { id: \"fundamentos\", nome: \"Fundamentos\", icone: Crown, cor: \"from-amber-500 to-orange-600\" },
+            { id: \"economia\", nome: \"Economia\", icone: Building, cor: \"from-emerald-500 to-teal-600\" },
+            { id: \"guerra\", nome: \"Guerra\", icone: Swords, cor: \"from-rose-500 to-pink-600\" },
+            { id: \"intriga\", nome: \"Intriga\", icone: Brain, cor: \"from-fuchsia-500 to-violet-600\" },
+            { id: \"religiao\", nome: \"Religião & Cultura\", icone: Church, cor: \"from-sky-500 to-cyan-600\" },
+            { id: \"dinastia\", nome: \"Dinastia & Sucessão\", icone: Network, cor: \"from-slate-500 to-gray-700\" },
+          ],
+          []
+        );
+
+        useEffect(() => {
+          if (!moduloAtivo || quiz.i === 0) return;
+          if (quiz.i % 3 !== 0) return;
+          const taxa = quiz.acertos / quiz.i;
+
+          setDificuldade((nivelAtual) => {
+            if (taxa >= 0.8 && nivelAtual !== \"dificil\") {
+              return nivelAtual === \"facil\" ? \"media\" : \"dificil\";
+            }
+            if (taxa < 0.5 && nivelAtual !== \"facil\") {
+              return nivelAtual === \"dificil\" ? \"media\" : \"facil\";
+            }
+            return nivelAtual;
+          });
+        }, [quiz.i, quiz.acertos, moduloAtivo]);
+
+        const iniciarDiagnostico = () => {
+          setTela(\"diagnostico\");
+          setDiagnostico({ i: 0, acertos: 0, respostas: [] });
+        };
+
+        const responderDiagnostico = (idx) => {
+          const cur = QUIZ.diagnostico[diagnostico.i];
+          const correto = idx === cur.c;
+          const novo = {
+            i: diagnostico.i + 1,
+            acertos: diagnostico.acertos + (correto ? 1 : 0),
+            respostas: [...diagnostico.respostas, { certo: correto }],
+          };
+
+          if (novo.i >= QUIZ.diagnostico.length) {
+            const pct = novo.acertos / QUIZ.diagnostico.length;
+            const lvl = pct >= 0.8 ? \"avancado\" : pct >= 0.6 ? \"intermediario\" : \"iniciante\";
+            setNivel(lvl);
+            setTela(\"resultado-diagnostico\");
+            setDiagnostico(novo);
+          } else {
+            setDiagnostico(novo);
+          }
+        };
+
+        const abrirModulo = (id) => {
+          setModuloAtivo(id);
+          setTela(\"licao\");
+          setPasso(0);
+          setQuiz({ i: 0, acertos: 0, resp: null, feedback: null });
+
+          if (nivel === \"avancado\") setDificuldade(\"dificil\");
+          else if (nivel === \"intermediario\") setDificuldade(\"media\");
+          else setDificuldade(\"facil\");
+        };
+
+        const concluirModulo = (desempenho = 0.7) => {
+          const estrelas = Math.max(1, Math.round(desempenho * 5));
+          setProgresso((prev) => ({ ...prev, [moduloAtivo]: { feito: true, estrelas } }));
+
+          if (desempenho < 0.8) {
+            setRevisaoPendente((lista) => Array.from(new Set([...lista, moduloAtivo])));
+          } else {
+            setRevisaoPendente((lista) => lista.filter((m) => m !== moduloAtivo));
+          }
+
+          setTela(\"modulo-concluido\");
+        };
+
+        const enviarRespostaQuiz = (idx) => {
+          const banco = QUIZ[moduloAtivo] || [];
+          const cur = banco[quiz.i];
+          if (!cur) {
+            concluirModulo(quiz.i === 0 ? 0 : quiz.acertos / quiz.i);
+            return;
+          }
+
+          const correto = idx === cur.c;
+          const feedback = correto
+            ? { tipo: \"ok\", titulo: \"Perfeito!\", texto: cur.exp }
+            : { tipo: \"erro\", titulo: \"Quase lá!\", texto: cur.exp };
+
+          setQuiz((prev) => ({
+            i: prev.i + 1,
+            acertos: prev.acertos + (correto ? 1 : 0),
+            resp: idx,
+            feedback,
+          }));
+        };
+
+        const proximaQuestao = () => {
+          const banco = QUIZ[moduloAtivo] || [];
+          if (quiz.i >= banco.length) {
+            concluirModulo(quiz.i === 0 ? 0 : quiz.acertos / quiz.i);
+            return;
+          }
+
+          setQuiz((prev) => ({ ...prev, resp: null, feedback: null }));
+        };
+
+        const Header = () => (
+          <header className=\"sticky top-0 z-40 backdrop-blur-lg bg-gradient-to-r from-indigo-600/95 via-violet-600/95 to-purple-600/95 text-white px-6 py-4 shadow-lg shadow-indigo-400/30\">
+            <div className=\"max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4\">
+              <div className=\"flex items-center gap-3\">
+                <div className=\"p-2 rounded-xl bg-white/20 shadow-inner\">
+                  <Castle className=\"w-6 h-6\" />
+                </div>
+                <div>
+                  <span className=\"font-bold tracking-wide text-lg\">Academia de Reis — Instrutor Mestre CK3</span>
+                  <p className=\"text-xs text-white/80\">Aprenda Crusader Kings 3 com táticas guiadas, checklists e simulações.</p>
+                </div>
+              </div>
+              <div className=\"flex flex-wrap items-center gap-3 text-sm opacity-95\">
+                <div className=\"flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full\">
+                  <Star className=\"w-4 h-4\" />
+                  <span>Nível: {nivel ? nivel : \"—\"}</span>
+                </div>
+                <div className=\"flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full\">
+                  <Target className=\"w-4 h-4\" />
+                  <span>Dificuldade: {dificuldade}</span>
+                </div>
+              </div>
+            </div>
+          </header>
+        );
+
+        const PainelModulos = () => (
+          <div className=\"grid gap-6 md:grid-cols-2 xl:grid-cols-3\">
+            {MODULOS.map((m, idx) => {
+              const Icone = m.icone;
+              const bloqueado = idx > 0 && !progresso[MODULOS[idx - 1].id]?.feito;
+              return (
+                <Card
+                  key={m.id}
+                  className={`transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl ${
+                    bloqueado ? \"opacity-60\" : \"\"
+                  }`}
+                >
+                  <div className=\"flex items-center gap-3 mb-5\">
+                    <div className={`p-2 rounded-xl bg-gradient-to-br ${m.cor} text-white shadow-lg shadow-indigo-200/70`}>
+                      <Icone className=\"w-6 h-6\" />
+                    </div>
+                    <div className=\"flex-1\">
+                      <h4 className=\"font-bold text-slate-900 text-lg\">{m.nome}</h4>
+                      <p className=\"text-xs text-slate-500\">{LESSONS[m.id].titulo}</p>
+                    </div>
+                    {progresso[m.id]?.feito ? (
+                      <CheckCircle2 className=\"w-5 h-5 text-emerald-500\" />
+                    ) : (
+                      <Lock className=\"w-5 h-5 text-slate-300\" />
+                    )}
+                  </div>
+                  <div className=\"mb-4\">
+                    <ProgressBar value={(progresso[m.id]?.estrelas || 0) * 20} />
+                  </div>
+                  <div className=\"flex items-center justify-between text-sm\">
+                    <div className=\"flex items-center gap-2 text-slate-600\">
+                      <Star className={`w-4 h-4 ${progresso[m.id]?.feito ? \"text-yellow-500\" : \"text-slate-300\"}`} />
+                      <span>{progresso[m.id]?.estrelas || 0} / 5</span>
+                    </div>
+                    <button
+                      disabled={bloqueado}
+                      onClick={() => abrirModulo(m.id)}
+                      className={`px-3 py-1.5 rounded-lg font-semibold text-white transition shadow-lg ${
+                        bloqueado
+                          ? \"bg-slate-300 cursor-not-allowed shadow-none\"
+                          : \"bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400\"
+                      }`}
+                    >
+                      {progresso[m.id]?.feito ? \"Revisar\" : \"Começar\"}
+                    </button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        );
+
+        const Licao = () => {
+          const dados = LESSONS[moduloAtivo];
+          const passoAtual = dados.passos[passo];
+          const podeVoltar = passo > 0;
+          const podeAvancar = passo < dados.passos.length - 1;
+
+          return (
+            <Card>
+              <SectionTitle icon={BookOpen} title={`Lição: ${dados.titulo}`} subtitle=\"Explique, demonstre e execute no jogo\" />
+              <div className=\"space-y-5\">
+                <div>
+                  <h4 className=\"font-semibold text-lg text-slate-900\">{passoAtual.titulo}</h4>
+                  <ul className=\"list-disc ml-6 text-slate-700 mt-3 space-y-1\">
+                    {passoAtual.acao.map((acao, index) => (
+                      <li key={index} className=\"leading-relaxed\">{acao}</li>
+                    ))}
+                  </ul>
+                  {passoAtual.dica && (
+                    <div className=\"mt-4 text-sm bg-indigo-50 border border-indigo-200 text-indigo-800 px-4 py-3 rounded-xl flex gap-2\">
+                      <Sparkles className=\"w-4 h-4 mt-0.5\" />
+                      <span>{passoAtual.dica}</span>
+                    </div>
+                  )}
+                </div>
+                <div className=\"flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2\">
+                  <button
+                    onClick={() => setPasso((p) => Math.max(0, p - 1))}
+                    disabled={!podeVoltar}
+                    className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-200 font-medium text-sm transition ${
+                      podeVoltar ? \"hover:bg-slate-50 hover:border-slate-300\" : \"opacity-50 cursor-not-allowed\"
+                    }`}
+                  >
+                    <ArrowLeft className=\"w-4 h-4\" />
+                    Anterior
+                  </button>
+                  {podeAvancar ? (
+                    <button
+                      onClick={() => setPasso((p) => p + 1)}
+                      className=\"flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold text-sm shadow-lg shadow-indigo-300/40 hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400\"
+                    >
+                      Próximo
+                      <ArrowRight className=\"w-4 h-4\" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setTela(\"pratica\")}
+                      className=\"flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-sm shadow-lg shadow-emerald-300/40 hover:bg-emerald-700 focus:ring-2 focus:ring-offset-2 focus:ring-emerald-400\"
+                    >
+                      Pronto! Vamos Praticar
+                      <Sword className=\"w-4 h-4\" />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className=\"mt-6\">
+                <SectionTitle icon={CheckCircle2} title=\"Checklist do Módulo\" />
+                <div className=\"flex flex-wrap gap-2\">
+                  {LESSONS[moduloAtivo].checklist.map((item, index) => (
+                    <Tag key={index}>{item}</Tag>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          );
+        };
+
+        const Pratica = () => {
+          const banco = QUIZ[moduloAtivo] || [];
+          const cur = banco[quiz.i];
+          if (!cur) {
+            return (
+              <Card>
+                <SectionTitle icon={Trophy} title=\"Módulo concluído (prática)\" subtitle=\"Hora de consolidar\" />
+                <div className=\"space-y-3\">
+                  <p className=\"text-slate-700\">Você concluiu as questões deste módulo.</p>
+                  <button
+                    onClick={() => concluirModulo(quiz.i === 0 ? 0 : quiz.acertos / quiz.i)}
+                    className=\"px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400\"
+                  >
+                    Finalizar módulo
+                  </button>
+                </div>
+              </Card>
+            );
+          }
+
+          return (
+            <Card>
+              <SectionTitle icon={Target} title=\"Prática guiada\" subtitle={`Dificuldade: ${dificuldade}`} />
+              <div className=\"space-y-4\">
+                <div className=\"text-slate-900 text-lg font-semibold\">{cur.q}</div>
+                <div className=\"grid md:grid-cols-2 gap-3\">
+                  {cur.a.map((alt, index) => (
+                    <button
+                      key={index}
+                      onClick={() => enviarRespostaQuiz(index)}
+                      disabled={quiz.resp !== null}
+                      className={`text-left px-4 py-3 rounded-xl border border-slate-200 transition text-sm font-medium ${
+                        quiz.resp === null ? \"hover:bg-slate-50\" : \"opacity-70\"
+                      }`}
+                    >
+                      {alt}
+                    </button>
+                  ))}
+                </div>
+                {quiz.feedback && (
+                  <div
+                    className={`p-3 rounded-xl border ${
+                      quiz.feedback.tipo === \"ok\"
+                        ? \"bg-emerald-50 border-emerald-200 text-emerald-800\"
+                        : \"bg-amber-50 border-amber-200 text-amber-800\"
+                    }`}
+                  >
+                    <div className=\"font-semibold mb-1\">{quiz.feedback.titulo}</div>
+                    <div className=\"text-sm\">{quiz.feedback.texto}</div>
+                    <button
+                      onClick={proximaQuestao}
+                      className=\"mt-3 px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700\"
+                    >
+                      Próximo
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className=\"mt-6 text-sm text-slate-600 flex items-center gap-4\">
+                <Pill>Questão {quiz.i + 1} / {banco.length}</Pill>
+                <Pill>Acertos: {quiz.acertos}</Pill>
+              </div>
+            </Card>
+          );
+        };
+
+        const RevisaoAdaptativa = () => (
+          <Card>
+            <SectionTitle
+              icon={ShieldQuestion}
+              title=\"Revisão Adaptativa\"
+              subtitle=\"Se você não atingiu 80% em um módulo, ele aparece aqui para reforço dirigido.\"
+            />
+            {revisaoPendente.length === 0 ? (
+              <p className=\"text-slate-700\">Você não possui revisões pendentes. Bom trabalho!</p>
+            ) : (
+              <div className=\"grid md:grid-cols-2 gap-3 mt-3\">
+                {revisaoPendente.map((id) => (
+                  <button
+                    key={id}
+                    onClick={() => abrirModulo(id)}
+                    className=\"text-left p-4 rounded-xl border hover:bg-slate-50 transition\"
+                  >
+                    <div className=\"font-semibold\">{LESSONS[id].titulo}</div>
+                    <div className=\"text-xs text-slate-500\">Clique para reforçar os pontos fracos</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </Card>
+        );
+
+        if (tela === \"boasvindas\")
+          return (
+            <div className=\"min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white\">
+              <Header />
+              <div className=\"max-w-4xl mx-auto p-6 text-center space-y-6\">
+                <div className=\"mb-6 animate-bounce\">
+                  <Sparkles className=\"w-16 h-16 mx-auto\" />
+                </div>
+                <div className=\"space-y-3\">
+                  <h1 className=\"text-4xl font-extrabold\">Bem-vindo à Academia de Reis</h1>
+                  <p className=\"text-lg text-white/90\">
+                    Do primeiro clique ao domínio total de Crusader Kings 3. Método avançado, prático e 100% em português.
+                  </p>
+                </div>
+                <div className=\"flex flex-wrap items-center justify-center gap-3\">
+                  <button
+                    onClick={iniciarDiagnostico}
+                    className=\"px-6 py-3 rounded-2xl bg-yellow-400 text-indigo-900 font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/50\"
+                  >
+                    Iniciar Diagnóstico
+                  </button>
+                  <button
+                    onClick={() => setTela(\"grade\")}
+                    className=\"px-6 py-3 rounded-2xl bg-white/10 border border-white/30 hover:bg-white/20 transition\"
+                  >
+                    Ver Módulos
+                  </button>
+                </div>
+                <Card className=\"bg-white/10 backdrop-blur border-white/20 text-white text-left\">
+                  <SectionTitle icon={HelpCircle} title=\"Como funciona\" />
+                  <ul className=\"list-disc ml-6 text-sm space-y-1 text-white/90\">
+                    <li>Explique + mostre + peça ação (clique a clique).</li>
+                    <li>Filtros e botões com os nomes oficiais do jogo em PT-BR.</li>
+                    <li>Active recall ao final de cada módulo.</li>
+                    <li>Simulações de erros comuns com correções guiadas.</li>
+                    <li>Gating: novos módulos liberam após dominar os anteriores.</li>
+                  </ul>
+                </Card>
+              </div>
+            </div>
+          );
+
+        if (tela === \"diagnostico\") {
+          const cur = QUIZ.diagnostico[diagnostico.i];
+          return (
+            <div className=\"min-h-screen bg-slate-50\">
+              <Header />
+              <div className=\"max-w-3xl mx-auto p-6\">
+                <Card>
+                  <SectionTitle
+                    icon={Target}
+                    title=\"Teste de Diagnóstico\"
+                    subtitle={`Questão ${diagnostico.i + 1} de ${QUIZ.diagnostico.length}`}
+                  />
+                  <div className=\"text-lg font-semibold text-slate-900\">{cur.q}</div>
+                  <div className=\"grid md:grid-cols-2 gap-3 mt-4\">
+                    {cur.a.map((alt, i) => (
+                      <button
+                        key={i}
+                        onClick={() => responderDiagnostico(i)}
+                        className=\"text-left px-4 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition\"
+                      >
+                        {alt}
+                      </button>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            </div>
+          );
+        }
+
+        if (tela === \"resultado-diagnostico\") {
+          const pct = (diagnostico.acertos / QUIZ.diagnostico.length) * 100;
+          return (
+            <div className=\"min-h-screen bg-slate-50\">
+              <Header />
+              <div className=\"max-w-3xl mx-auto p-6\">
+                <Card className=\"text-center\">
+                  <Trophy className=\"w-16 h-16 text-yellow-500 mx-auto mb-2\" />
+                  <div className=\"text-5xl font-extrabold text-slate-900\">{pct.toFixed(0)}%</div>
+                  <div className=\"mt-2 text-slate-700\">
+                    Nível inicial: <b>{nivel}</b>
+                  </div>
+                  <div className=\"mt-6 flex flex-wrap items-center justify-center gap-2\">
+                    <button
+                      onClick={() => setTela(\"grade\")}
+                      className=\"px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700\"
+                    >
+                      Explorar Módulos
+                    </button>
+                    <button
+                      onClick={() => abrirModulo(\"preparacao\")}
+                      className=\"px-5 py-2 rounded-lg border border-slate-200 hover:bg-slate-50\"
+                    >
+                      Começar pela Preparação
+                    </button>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          );
+        }
+
+        if (tela === \"grade\")
+          return (
+            <div className=\"min-h-screen bg-slate-50\">
+              <Header />
+              <div className=\"max-w-6xl mx-auto p-6 space-y-6\">
+                <PainelModulos />
+                <RevisaoAdaptativa />
+                <Card>
+                  <SectionTitle icon={Layers} title=\"Checkpoints de Mestre\" />
+                  <div className=\"grid md:grid-cols-3 gap-3\">
+                    {CHECKPOINTS.map((ck, i) => (
+                      <div key={i} className=\"p-3 rounded-xl border border-slate-200 bg-white/60\">
+                        <div className=\"text-sm text-slate-500\">{ck.tempo}</div>
+                        <ul className=\"list-disc ml-5 text-sm text-slate-800 mt-1 space-y-1\">
+                          {ck.metas.map((m, j) => (
+                            <li key={j}>{m}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            </div>
+          );
+
+        if (tela === \"licao\" || tela === \"pratica\") {
+          const modulo = MODULOS.find((m) => m.id === moduloAtivo);
+          if (!modulo) return null;
+          return (
+            <div className=\"min-h-screen bg-slate-50\">
+              <Header />
+              <div className=\"max-w-5xl mx-auto p-6 space-y-6\">
+                <div className=\"flex flex-wrap items-center gap-3\">
+                  <button
+                    onClick={() => setTela(\"grade\")}
+                    className=\"px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-white transition\"
+                  >
+                    <ArrowLeft className=\"w-4 h-4\" />
+                  </button>
+                  <div className={`p-2 rounded-xl text-white bg-gradient-to-br ${modulo.cor}`}>
+                    <modulo.icone className=\"w-5 h-5\" />
+                  </div>
+                  <div className=\"text-xl font-bold text-slate-900\">{modulo.nome}</div>
+                  <Pill>Dificuldade: {dificuldade}</Pill>
+                </div>
+                {tela === \"licao\" ? <Licao /> : <Pratica />}
+                <Card>
+                  <SectionTitle
+                    icon={AlertTriangle}
+                    title=\"Simulações de Erro\"
+                    subtitle=\"Pratique o erro de forma segura e corrija-o em seguida\"
+                  />
+                  <div className=\"grid md:grid-cols-3 gap-3\">
+                    {Object.values(ERROR_SIMULATIONS).map((e, i) => (
+                      <div key={i} className=\"p-4 rounded-xl border border-slate-200 bg-white/70\">
+                        <div className=\"font-semibold text-slate-900\">{e.titulo}</div>
+                        <ol className=\"list-decimal ml-5 text-sm text-slate-700 mt-2 space-y-1\">
+                          {e.passos.map((p, j) => (
+                            <li key={j}>{p}</li>
+                          ))}
+                        </ol>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            </div>
+          );
+        }
+
+        if (tela === \"modulo-concluido\") {
+          const estrelas = progresso[moduloAtivo]?.estrelas || 0;
+          return (
+            <div className=\"min-h-screen bg-slate-50\">
+              <Header />
+              <div className=\"max-w-3xl mx-auto p-6\">
+                <Card className=\"text-center\">
+                  <Trophy className=\"w-16 h-16 text-yellow-500 mx-auto\" />
+                  <h3 className=\"text-2xl font-bold mt-2 text-slate-900\">Módulo concluído!</h3>
+                  <div className=\"flex items-center justify-center gap-1 my-3\">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-6 h-6 ${
+                          i < estrelas ? \"text-yellow-400 fill-yellow-400\" : \"text-slate-300\"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className=\"mt-4 flex flex-wrap items-center justify-center gap-2\">
+                    <button
+                      onClick={() => setTela(\"grade\")}
+                      className=\"px-5 py-2 rounded-lg border border-slate-200 hover:bg-slate-50\"
+                    >
+                      Voltar aos módulos
+                    </button>
+                    <button
+                      onClick={() => abrirModulo(moduloAtivo)}
+                      className=\"px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700\"
+                    >
+                      Refazer para 5★
+                    </button>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          );
+        }
+
+        return null;
+      }
+
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<AcademiaCK3 />);
+    </script>
+  </body>
+</html>

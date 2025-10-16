@@ -68,7 +68,7 @@
       src="https://unpkg.com/lucide-react@0.344.0/dist/lucide-react.umd.js"
     ></script>
 
-    <script type="text/babel">
+    <script type="text/babel" data-presets="env,react">
       const { useEffect, useMemo, useState } = React;
       const fallbackIcon = (emoji, label) => ({ className = "", style = {}, ...rest }) => (
         <span
@@ -87,12 +87,14 @@
         </span>
       );
 
-      const lucide = window.lucideReact || {};
-      if (!window.lucideReact) {
+      const lucide = window.lucideReact || window.lucide || {};
+      if (!Object.keys(lucide).length) {
         console.warn(
           "[AcademiaCK3] lucide-react UMD não foi carregado. Ícones serão exibidos com emojis de fallback."
         );
       }
+
+      const iconSource = lucide.default || lucide;
 
       const {
         Trophy = fallbackIcon("🏆", "troféu"),
@@ -126,7 +128,7 @@
         Coins = fallbackIcon("🪙", "moedas"),
         Hammer = fallbackIcon("🔨", "martelo"),
         ShieldQuestion = fallbackIcon("❓", "dúvida"),
-      } = lucide;
+      } = iconSource;
 
       const Tag = ({ children }) => (
         <span

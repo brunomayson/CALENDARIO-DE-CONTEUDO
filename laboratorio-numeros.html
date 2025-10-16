@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Laboratório dos Números</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
+    <div id="app"></div>
+
+    <script>
+      const state = {
+        currentScreen: "welcome",
+        userLevel: null,
+        currentModule: null,
+        currentQuestion: 0,
+        score: 0,
+        consecutiveCorrect: 0,
+        consecutiveWrong: 0,
+        difficulty: "medium",
+        feedback: null,
+        completedPlanets: [],
+        totalStars: 0,
+        diagnosticAnswers: [],
+      };
+
+      const planets = [
+        {
+          id: "fracoes",
+          name: "Planeta Pizzarium",
+          icon: "pizza",
+          color: "from-orange-500 to-red-600",
+          emoji: "🍕",
+        },
+        {
+          id: "decimais",
+          name: "Planeta Decimalis",
+          icon: "gem",
+          color: "from-purple-500 to-pink-600",
+          emoji: "💎",
+        },
+        {
+          id: "operacoes",
+          name: "Planeta Calcularis",
+          icon: "calculator",
+          color: "from-blue-500 to-cyan-600",
+          emoji: "🔢",
+        },
+        {
+          id: "logica",
+          name: "Planeta Enigmatis",
+          icon: "brain",
+          color: "from-green-500 to-teal-600",
+          emoji: "🧩",
+        },
+      ];
+
+      const diagnosticQuestions = [
+        {
+          question: "Quanto é 48 ÷ 6?",
+          options: ["6", "7", "8", "9"],
+          correct: 2,
+          topic: "operacoes",
+        },
+        {
+          question: "Qual fração representa metade?",
+          options: ["1/4", "1/2", "1/3", "2/4"],
+          correct: 1,
+          topic: "fracoes",
+        },
+        {
+          question: "0.5 é igual a:",
+          options: ["5/10", "5/100", "1/5", "5/1"],
+          correct: 0,
+          topic: "decimais",
+        },
+        {
+          question: "Se João tem 12 anos e Maria tem o dobro, quantos anos tem Maria?",
+          options: ["20", "22", "24", "26"],
+          correct: 2,
+          topic: "logica",
+        },
+        {
+          question: "Qual é 30% de 100?",
+          options: ["3", "30", "300", "0.3"],
+          correct: 1,
+          topic: "decimais",
+        },
+      ];
+
+      const moduleQuestions = {
+        fracoes: {
+          easy: [
+            {
+              question:
+                "Se você dividir uma pizza em 4 partes iguais e comer 1, que fração comeu?",
+              visual: "🍕 dividida em 4 partes, 1 colorida",
+              options: ["1/4", "1/2", "2/4", "4/1"],
+              correct: 0,
+              explanation:
+                "Você comeu 1 parte de um total de 4 partes iguais. Isso é 1/4 (um quarto)!",
+            },
+            {
+              question: "Qual fração é maior: 1/2 ou 1/4?",
+              visual: "Compare: metade vs um quarto",
+              options: ["1/2", "1/4", "São iguais", "Não sei"],
+              correct: 0,
+              explanation:
+                "1/2 significa dividir em 2 partes (pedaços maiores). 1/4 divide em 4 partes (pedaços menores). Então 1/2 é maior!",
+            },
+          ],
+          medium: [
+            {
+              question: "Se 2/8 de uma pizza foram comidos, quantos pedaços restam?",
+              visual: "Pizza com 8 pedaços, 2 faltando",
+              options: ["4", "6", "8", "2"],
+              correct: 1,
+              explanation:
+                "Se eram 8 pedaços e 2 foram comidos, restam 8 - 2 = 6 pedaços!",
+            },
+          ],
+          hard: [
+            {
+              question: "Simplifique a fração 4/8:",
+              options: ["1/2", "2/4", "8/16", "4/8"],
+              correct: 0,
+              explanation:
+                "4/8 pode ser simplificado dividindo ambos por 4: 4÷4 = 1 e 8÷4 = 2, então 1/2!",
+            },
+          ],
+        },
+        operacoes: {
+          easy: [
+            {
+              question: "Quanto é 15 + 27?",
+              options: ["40", "41", "42", "43"],
+              correct: 2,
+              explanation:
+                "15 + 27 = 42. Você pode pensar: 15 + 20 = 35, depois 35 + 7 = 42!",
+            },
+          ],
+          medium: [
+            {
+              question:
+                "Se você tem 3 caixas com 12 chocolates em cada, quantos chocolates tem no total?",
+              options: ["15", "24", "36", "48"],
+              correct: 2,
+              explanation: "Isso é uma multiplicação: 3 × 12 = 36 chocolates!",
+            },
+          ],
+          hard: [
+            {
+              question: "Qual é o resultado de 144 ÷ 12?",
+              options: ["10", "11", "12", "13"],
+              correct: 2,
+              explanation:
+                "144 ÷ 12 = 12. Você pode pensar: 12 × 12 = 144!",
+            },
+          ],
+        },
+      };
+
+      function resetFeedback() {
+        state.feedback = null;
+      }
+
+      function startDiagnostic() {
+        state.currentScreen = "diagnostic";
+        state.currentQuestion = 0;
+        state.diagnosticAnswers = [];
+        render();
+      }
+
+      function handleDiagnosticAnswer(index) {
+        const answers = state.diagnosticAnswers.slice();
+        answers.push({
+          question: state.currentQuestion,
+          correct: index === diagnosticQuestions[state.currentQuestion].correct,
+        });
+        state.diagnosticAnswers = answers;
+
+        if (state.currentQuestion < diagnosticQuestions.length - 1) {
+          state.currentQuestion += 1;
+        } else {
+          evaluateDiagnostic();
+          return;
+        }
+        render();
+      }
+
+      function evaluateDiagnostic() {
+        const correctCount = state.diagnosticAnswers.filter((a) => a.correct).length;
+        const percentage = (correctCount / state.diagnosticAnswers.length) * 100;
+        let level = "beginner";
+        if (percentage >= 80) {
+          level = "advanced";
+        } else if (percentage >= 60) {
+          level = "intermediate";
+        }
+        state.userLevel = level;
+        state.currentScreen = "diagnostic-result";
+        render();
+      }
+
+      function goToPlanets() {
+        state.currentScreen = "planets";
+        render();
+      }
+
+      function startModule(planetId) {
+        state.currentModule = planetId;
+        state.currentQuestion = 0;
+        state.score = 0;
+        state.consecutiveCorrect = 0;
+        state.consecutiveWrong = 0;
+        state.feedback = null;
+        state.difficulty = "medium";
+        state.currentScreen = "learning";
+        render();
+      }
+
+      function handleAnswer(index) {
+        const questions =
+          moduleQuestions[state.currentModule]?.[state.difficulty] || [];
+        const currentQ = questions[state.currentQuestion];
+        if (!currentQ) return;
+        const isCorrect = index === currentQ.correct;
+
+        if (isCorrect) {
+          state.score += 1;
+          state.consecutiveCorrect += 1;
+          state.consecutiveWrong = 0;
+          state.feedback = {
+            type: "success",
+            message: "🌟 Incrível! Você acertou!",
+            explanation: currentQ.explanation,
+          };
+
+          if (state.consecutiveCorrect >= 3 && state.difficulty !== "hard") {
+            state.difficulty = state.difficulty === "easy" ? "medium" : "hard";
+            state.consecutiveCorrect = 0;
+          }
+        } else {
+          state.consecutiveWrong += 1;
+          state.consecutiveCorrect = 0;
+          state.feedback = {
+            type: "error",
+            message: "🤔 Ainda não está certo, mas estamos quase!",
+            explanation: currentQ.explanation,
+            encouragement:
+              "Você pensou com coragem — e isso é o que faz os grandes matemáticos brilharem!",
+          };
+
+          if (state.consecutiveWrong >= 2 && state.difficulty !== "easy") {
+            state.difficulty = state.difficulty === "hard" ? "medium" : "easy";
+            state.consecutiveWrong = 0;
+          }
+        }
+        render();
+      }
+
+      function nextQuestion() {
+        const questions =
+          moduleQuestions[state.currentModule]?.[state.difficulty] || [];
+        if (state.currentQuestion < questions.length - 1) {
+          state.currentQuestion += 1;
+          resetFeedback();
+          render();
+        } else {
+          finishModule();
+        }
+      }
+
+      function finishModule() {
+        const questions =
+          moduleQuestions[state.currentModule]?.[state.difficulty] || [];
+        const finalScore = questions.length
+          ? (state.score / questions.length) * 10
+          : 0;
+        const stars = Math.round(finalScore / 2);
+        state.totalStars += stars;
+
+        if (finalScore >= 8 && !state.completedPlanets.includes(state.currentModule)) {
+          state.completedPlanets = state.completedPlanets.concat(state.currentModule);
+        }
+
+        state.currentScreen = "module-complete";
+        render();
+      }
+
+      function difficultyLabel(value) {
+        if (value === "easy") return "Iniciante";
+        if (value === "medium") return "Intermediário";
+        return "Avançado";
+      }
+
+      function renderWelcome() {
+        return `
+          <div class="min-h-screen flex items-center justify-center p-6">
+            <div class="max-w-2xl mx-auto text-center">
+              <div class="mb-8 animate-bounce">
+                <i data-lucide="sparkles" class="w-24 h-24 text-yellow-300 mx-auto"></i>
+              </div>
+              <h1 class="text-6xl font-bold text-white mb-6 animate-pulse">
+                Laboratório dos Números
+              </h1>
+              <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 mb-8 border-2 border-white/20">
+                <p class="text-2xl text-white mb-4">
+                  Bem-vinda, <span class="font-bold text-yellow-300">Brenda</span>!
+                </p>
+                <p class="text-xl text-white/90 mb-2">
+                  Aqui, cada desafio é um degrau da sabedoria matemática.
+                </p>
+                <p class="text-lg text-white/80">
+                  Vamos começar nossa missão? 🚀
+                </p>
+              </div>
+              <button data-action="start-diagnostic"
+                class="bg-yellow-400 hover:bg-yellow-500 text-purple-900 font-bold text-2xl px-12 py-6 rounded-2xl shadow-2xl transform hover:scale-105 transition-all">
+                Iniciar Jornada ✨
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderDiagnostic() {
+        const currentQ = diagnosticQuestions[state.currentQuestion];
+        return `
+          <div class="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
+            <div class="max-w-3xl mx-auto">
+              <div class="bg-white rounded-3xl shadow-2xl p-8 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                  <h2 class="text-3xl font-bold text-gray-800">Teste de Diagnóstico</h2>
+                  <span class="text-lg text-gray-600">
+                    Questão ${state.currentQuestion + 1} de ${diagnosticQuestions.length}
+                  </span>
+                </div>
+                <div class="bg-purple-50 p-6 rounded-2xl mb-6">
+                  <p class="text-2xl text-gray-800 mb-6">${currentQ.question}</p>
+                  <div class="grid grid-cols-2 gap-4">
+                    ${currentQ.options
+                      .map(
+                        (option, idx) => `
+                          <button data-answer="${idx}"
+                            class="bg-white hover:bg-purple-100 border-2 border-purple-200 p-4 rounded-xl text-lg font-medium transition-all hover:scale-105">
+                            ${option}
+                          </button>
+                        `
+                      )
+                      .join("")}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderDiagnosticResult() {
+        const correctCount = state.diagnosticAnswers.filter((a) => a.correct).length;
+        const percentage = state.diagnosticAnswers.length
+          ? (correctCount / state.diagnosticAnswers.length) * 100
+          : 0;
+        return `
+          <div class="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6">
+            <div class="max-w-4xl mx-auto">
+              <div class="bg-white rounded-3xl shadow-2xl p-8 text-center">
+                <i data-lucide="trophy" class="w-24 h-24 text-yellow-500 mx-auto mb-6"></i>
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Diagnóstico Completo!</h2>
+                <div class="bg-gradient-to-r from-purple-100 to-pink-100 p-6 rounded-2xl mb-6">
+                  <p class="text-6xl font-bold text-purple-600 mb-2">${percentage.toFixed(0)}%</p>
+                  <p class="text-xl text-gray-700">Você acertou ${correctCount} de ${state.diagnosticAnswers.length} questões</p>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mb-8">
+                  <div class="bg-green-100 p-4 rounded-xl">
+                    <div class="text-3xl mb-2">🟢</div>
+                    <p class="font-semibold text-green-700">Forte</p>
+                    <p class="text-sm text-gray-600">Pronta para desafios!</p>
+                  </div>
+                  <div class="bg-yellow-100 p-4 rounded-xl">
+                    <div class="text-3xl mb-2">🟡</div>
+                    <p class="font-semibold text-yellow-700">Em Desenvolvimento</p>
+                    <p class="text-sm text-gray-600">Continue praticando</p>
+                  </div>
+                  <div class="bg-red-100 p-4 rounded-xl">
+                    <div class="text-3xl mb-2">🔴</div>
+                    <p class="font-semibold text-red-700">Precisa Reforço</p>
+                    <p class="text-sm text-gray-600">Vamos revisar juntas</p>
+                  </div>
+                </div>
+                <button data-action="go-planets"
+                  class="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xl px-10 py-4 rounded-xl shadow-lg hover:scale-105 transition-all">
+                  Explorar os Planetas Matemáticos 🚀
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderPlanets() {
+        const progress = planets.length
+          ? (state.completedPlanets.length / planets.length) * 100
+          : 0;
+        return `
+          <div class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-6">
+            <div class="max-w-6xl mx-auto">
+              <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h2 class="text-3xl font-bold text-white mb-2">Meu Progresso</h2>
+                    <p class="text-white/80">Continue explorando os planetas matemáticos!</p>
+                  </div>
+                  <div class="text-right">
+                    <div class="flex items-center gap-2 mb-2 justify-end">
+                      <i data-lucide="star" class="w-6 h-6 text-yellow-300"></i>
+                      <span class="text-3xl font-bold text-yellow-300">${state.totalStars}</span>
+                    </div>
+                    <p class="text-white/80 text-sm">Estrelas conquistadas</p>
+                  </div>
+                </div>
+                <div class="mt-4 bg-white/20 rounded-full h-3">
+                  <div class="bg-yellow-400 h-full rounded-full transition-all" style="width: ${progress}%"></div>
+                </div>
+              </div>
+              <div class="bg-gradient-to-r from-pink-500/20 to-purple-500/20 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-white/20">
+                <p class="text-xl text-white italic">
+                  💬 "Brenda, você está dominando os números com alegria e foco. Cada resposta sua é um passo rumo ao pensamento lógico brilhante!"
+                  <span class="block mt-2 text-right text-sm">— Dara, sua mentora</span>
+                </p>
+              </div>
+              <div class="grid md:grid-cols-2 gap-6">
+                ${planets
+                  .map((planet, index) => {
+                    const isCompleted = state.completedPlanets.includes(planet.id);
+                    const prevPlanet = planets[index - 1];
+                    const isLocked =
+                      planet.id !== "fracoes" &&
+                      prevPlanet &&
+                      !state.completedPlanets.includes(prevPlanet.id);
+                    return `
+                      <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border-2 ${
+                        isCompleted ? "border-yellow-400" : "border-white/20"
+                      } ${
+                        isLocked ? "opacity-50" : "hover:scale-105"
+                      } transition-all">
+                        <div class="text-center">
+                          <div class="text-7xl mb-4">${planet.emoji}</div>
+                          <h3 class="text-2xl font-bold text-white mb-2">${planet.name}</h3>
+                          ${
+                            isCompleted
+                              ? `<div class="flex items-center justify-center gap-2 mb-4 text-yellow-400 font-semibold">
+                                  <i data-lucide="check-circle" class="w-6 h-6"></i>
+                                  <span>Planeta Conquistado!</span>
+                                </div>`
+                              : ""
+                          }
+                          ${
+                            isLocked
+                              ? '<p class="text-white/60 mb-4">🔒 Complete o planeta anterior</p>'
+                              : `<button data-planet="${planet.id}" class="bg-gradient-to-r ${
+                                  planet.color
+                                } text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:scale-105 transition-all mt-4">
+                                  ${isCompleted ? "Revisar Planeta" : "Explorar Planeta"} 🚀
+                                </button>`
+                          }
+                        </div>
+                      </div>
+                    `;
+                  })
+                  .join("")}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderLearning() {
+        const questions =
+          moduleQuestions[state.currentModule]?.[state.difficulty] || [];
+        const currentQ = questions[state.currentQuestion];
+        const planet = planets.find((p) => p.id === state.currentModule);
+        if (!currentQ || !planet) return "";
+        return `
+          <div class="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-6">
+            <div class="max-w-4xl mx-auto">
+              <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <span class="text-4xl">${planet.emoji}</span>
+                    <div>
+                      <h2 class="text-2xl font-bold text-gray-800">${planet.name}</h2>
+                      <p class="text-sm text-gray-600">Nível: ${difficultyLabel(state.difficulty)}</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm text-gray-600">Questão ${state.currentQuestion + 1}/${
+          questions.length
+        }</p>
+                    <p class="text-lg font-bold text-purple-600">Pontos: ${state.score}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-white rounded-3xl shadow-2xl p-8 mb-6">
+                ${
+                  currentQ.visual
+                    ? `<div class="bg-purple-50 p-6 rounded-2xl mb-6 text-center">
+                        <p class="text-lg text-gray-700">${currentQ.visual}</p>
+                      </div>`
+                    : ""
+                }
+                <p class="text-2xl text-gray-800 mb-8">${currentQ.question}</p>
+                <div class="grid grid-cols-2 gap-4">
+                  ${currentQ.options
+                    .map(
+                      (option, idx) => `
+                        <button data-module-answer="${idx}" ${
+                        state.feedback ? "disabled" : ""
+                      }
+                          class="bg-gradient-to-r from-purple-100 to-pink-100 hover:from-purple-200 hover:to-pink-200 border-2 border-purple-300 p-6 rounded-2xl text-xl font-medium transition-all hover:scale-105 disabled:opacity-50">
+                          ${option}
+                        </button>
+                      `
+                    )
+                    .join("")}
+                </div>
+              </div>
+              ${state.feedback ? renderFeedback() : ""}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderFeedback() {
+        const feedback = state.feedback;
+        if (!feedback) return "";
+        return `
+          <div class="bg-white rounded-3xl shadow-2xl p-8 border-4 ${
+            feedback.type === "success" ? "border-green-400" : "border-orange-400"
+          }">
+            <div class="text-center mb-4">
+              ${
+                feedback.type === "success"
+                  ? '<i data-lucide="check-circle" class="w-16 h-16 text-green-500 mx-auto mb-4"></i>'
+                  : '<i data-lucide="x-circle" class="w-16 h-16 text-orange-500 mx-auto mb-4"></i>'
+              }
+              <h3 class="text-3xl font-bold mb-2">${feedback.message}</h3>
+            </div>
+            <div class="bg-blue-50 p-6 rounded-2xl mb-4">
+              <p class="text-lg text-gray-800">${feedback.explanation}</p>
+            </div>
+            ${
+              feedback.encouragement
+                ? `<div class="bg-purple-50 p-4 rounded-xl mb-4">
+                    <p class="text-center text-purple-700 italic">${feedback.encouragement}</p>
+                  </div>`
+                : ""
+            }
+            <button data-action="next-question"
+              class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xl py-4 rounded-xl hover:scale-105 transition-all">
+              Próximo Desafio <span class="inline-block ml-2">➜</span>
+            </button>
+          </div>
+        `;
+      }
+
+      function renderModuleComplete() {
+        const questions =
+          moduleQuestions[state.currentModule]?.[state.difficulty] || [];
+        const finalScore = questions.length
+          ? ((state.score / questions.length) * 10).toFixed(1)
+          : "0.0";
+        const stars = Math.round(parseFloat(finalScore) / 2);
+        const planet = planets.find((p) => p.id === state.currentModule);
+        if (!planet) return "";
+        return `
+          <div class="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-pink-50 p-6 flex items-center justify-center">
+            <div class="max-w-2xl mx-auto text-center">
+              <div class="animate-bounce mb-6">
+                <i data-lucide="trophy" class="w-32 h-32 text-yellow-500 mx-auto"></i>
+              </div>
+              <h2 class="text-5xl font-bold text-gray-800 mb-4">
+                Planeta Conquistado!
+              </h2>
+              <div class="bg-white rounded-3xl shadow-2xl p-8 mb-6">
+                <div class="text-6xl mb-4">${planet.emoji}</div>
+                <h3 class="text-3xl font-bold text-purple-600 mb-6">${planet.name}</h3>
+                <div class="bg-gradient-to-r from-yellow-100 to-orange-100 p-6 rounded-2xl mb-6">
+                  <p class="text-7xl font-bold text-orange-600 mb-2">${finalScore}</p>
+                  <div class="flex justify-center gap-2 mb-4">
+                    ${Array.from({ length: 5 })
+                      .map(
+                        (_, i) => `
+                          <i data-lucide="star" class="w-8 h-8 ${
+                            i < stars
+                              ? "text-yellow-400 fill-yellow-400"
+                              : "text-gray-300"
+                          }"></i>
+                        `
+                      )
+                      .join("")}
+                  </div>
+                  <p class="text-xl text-gray-700 font-semibold">
+                    ${
+                      parseFloat(finalScore) >= 9
+                        ? "🌟 Excelente raciocínio!"
+                        : parseFloat(finalScore) >= 8
+                        ? "⭐ Muito bem!"
+                        : "💪 Continue praticando!"
+                    }
+                  </p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-xl mb-6">
+                  <p class="text-lg text-purple-700">
+                    Você acertou ${state.score} de ${questions.length} questões!
+                  </p>
+                </div>
+                ${
+                  parseFloat(finalScore) >= 8
+                    ? `<div class="bg-green-50 border-2 border-green-300 p-4 rounded-xl mb-4">
+                        <p class="text-green-700 font-semibold">
+                          ✅ Novo planeta desbloqueado!
+                        </p>
+                      </div>`
+                    : ""
+                }
+              </div>
+              <button data-action="go-planets"
+                class="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-2xl px-12 py-5 rounded-2xl shadow-2xl hover:scale-105 transition-all">
+                Explorar Mais Planetas 🚀
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      function render() {
+        const app = document.getElementById("app");
+        let content = "";
+        switch (state.currentScreen) {
+          case "welcome":
+            content = renderWelcome();
+            break;
+          case "diagnostic":
+            content = renderDiagnostic();
+            break;
+          case "diagnostic-result":
+            content = renderDiagnosticResult();
+            break;
+          case "planets":
+            content = renderPlanets();
+            break;
+          case "learning":
+            content = renderLearning();
+            break;
+          case "module-complete":
+            content = renderModuleComplete();
+            break;
+          default:
+            content = "";
+        }
+        app.innerHTML = content;
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+        attachEventHandlers();
+      }
+
+      function attachEventHandlers() {
+        const startButton = document.querySelector('[data-action="start-diagnostic"]');
+        if (startButton) {
+          startButton.addEventListener("click", startDiagnostic);
+        }
+
+        const diagnosticButtons = document.querySelectorAll('[data-answer]');
+        diagnosticButtons.forEach((btn) => {
+          btn.addEventListener("click", (event) => {
+            const index = Number(event.currentTarget.getAttribute("data-answer"));
+            handleDiagnosticAnswer(index);
+          });
+        });
+
+        const goPlanetsButtons = document.querySelectorAll('[data-action="go-planets"]');
+        goPlanetsButtons.forEach((btn) => {
+          btn.addEventListener("click", goToPlanets);
+        });
+
+        const planetButtons = document.querySelectorAll('[data-planet]');
+        planetButtons.forEach((btn) => {
+          btn.addEventListener("click", (event) => {
+            const planetId = event.currentTarget.getAttribute("data-planet");
+            startModule(planetId);
+          });
+        });
+
+        const moduleButtons = document.querySelectorAll('[data-module-answer]');
+        moduleButtons.forEach((btn) => {
+          btn.addEventListener("click", (event) => {
+            const index = Number(
+              event.currentTarget.getAttribute("data-module-answer")
+            );
+            handleAnswer(index);
+          });
+        });
+
+        const nextButton = document.querySelector('[data-action="next-question"]');
+        if (nextButton) {
+          nextButton.addEventListener("click", nextQuestion);
+        }
+      }
+
+      render();
+    </script>
+  </body>
+</html>

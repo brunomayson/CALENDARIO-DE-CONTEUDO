@@ -10,245 +10,178 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
+    <!-- 
+      Usaremos a versão full do Tailwind por garantia, 
+      embora a versão linkada na sua query seja OK
+      A versão com o script JIT é mais moderna, mas 
+      a sua já funciona perfeitamente.
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
       html,
       body {
         font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
           "Segoe UI", sans-serif;
         min-height: 100%;
+        background: radial-gradient(circle at top left, #ede9fe, #f5f3ff 40%,
+            #f8fafc);
       }
 
-      body {
-        background: radial-gradient(
-          circle at top left,
-          #ede9fe,
-          #f5f3ff 40%,
-          #f8fafc
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(79, 70, 229, 0.6) rgba(99, 102, 241, 0.12);
+      }
+
+      *::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+
+      *::-webkit-scrollbar-track {
+        background: rgba(99, 102, 241, 0.08);
+      }
+
+      *::-webkit-scrollbar-thumb {
+        background: linear-gradient(
+          180deg,
+          rgba(99, 102, 241, 0.9),
+          rgba(129, 140, 248, 0.8)
         );
-        color: #0f172a;
+        border-radius: 9999px;
       }
 
       .glass-card {
-        background: rgba(255, 255, 255, 0.84);
-        backdrop-filter: blur(18px);
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(16px);
         border: 1px solid rgba(148, 163, 184, 0.18);
-      }
-
-      .fancy-gradient {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
-      }
-
-      .emoji-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.5rem;
-        height: 1.5rem;
-        font-size: 1.25rem;
-      }
-
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background: radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.18), transparent 45%),
-          radial-gradient(circle at 80% 0%, rgba(236, 72, 153, 0.16), transparent 50%),
-          radial-gradient(circle at 30% 80%, rgba(14, 165, 233, 0.15), transparent 55%);
-        pointer-events: none;
-        z-index: -2;
-      }
-
-      body::after {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background-image: linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.05) 0%,
-            rgba(255, 255, 255, 0) 50%,
-            rgba(255, 255, 255, 0.05) 100%
-          ),
-          url("https://images.unsplash.com/photo-1604602587407-1868f3c7f08b?auto=format&fit=crop&w=1600&q=80");
-        background-size: 240px, cover;
-        background-position: center;
-        opacity: 0.12;
-        filter: saturate(120%);
-        mix-blend-mode: screen;
-        pointer-events: none;
-        z-index: -3;
-      }
-
-      .holo-card {
-        position: relative;
-        border-radius: 1.5rem;
-        background: rgba(248, 250, 252, 0.75);
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        box-shadow: 0 40px 80px rgba(79, 70, 229, 0.08);
-        overflow: hidden;
-      }
-
-      .holo-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(120deg, rgba(99, 102, 241, 0.2), transparent 45%),
-          linear-gradient(-140deg, rgba(236, 72, 153, 0.2), transparent 55%);
-        opacity: 0.7;
-        pointer-events: none;
-      }
-
-      .holo-card > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .hud-tile {
-        border-radius: 1rem;
-        background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(37, 99, 235, 0.85));
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 20px 35px rgba(15, 23, 42, 0.35);
-        color: #f8fafc;
-        padding: 1rem;
-        position: relative;
-      }
-
-      .hud-tile::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        pointer-events: none;
-      }
-
-      .hud-meter {
-        height: 0.4rem;
-        border-radius: 9999px;
-        background: rgba(255, 255, 255, 0.22);
-        overflow: hidden;
-        margin-top: 0.75rem;
-      }
-
-      .hud-meter span {
-        display: block;
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, #38bdf8, #22d3ee);
-      }
-
-      .tab-button {
-        border-radius: 9999px;
-        padding: 0.55rem 1.3rem;
-        border: 1px solid rgba(99, 102, 241, 0.15);
-        background: rgba(255, 255, 255, 0.65);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 600;
-        color: #4338ca;
-      }
-
-      .tab-button[data-active="true"] {
-        background: linear-gradient(120deg, rgba(129, 140, 248, 0.85), rgba(236, 72, 153, 0.85));
-        color: white;
-        border-color: transparent;
-        box-shadow: 0 12px 25px rgba(99, 102, 241, 0.25);
-      }
-
-      .intel-card {
-        border-radius: 1rem;
-        background: rgba(15, 23, 42, 0.8);
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        padding: 1rem;
-        color: rgba(226, 232, 240, 0.92);
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.45);
-      }
-
-      .intel-card strong {
-        color: #38bdf8;
-      }
-
-      .event-entry {
-        border-radius: 1rem;
-        padding: 0.75rem 1rem;
-        border: 1px solid rgba(148, 163, 184, 0.2);
-        background: rgba(255, 255, 255, 0.75);
-        display: grid;
-        gap: 0.35rem;
-      }
-
-      .event-entry[data-type="alerta"] {
-        border-color: rgba(248, 113, 113, 0.35);
-        background: rgba(254, 242, 242, 0.9);
-        color: #991b1b;
-      }
-
-      .event-entry[data-type="sucesso"] {
-        border-color: rgba(16, 185, 129, 0.35);
-        background: rgba(236, 253, 245, 0.95);
-        color: #065f46;
-      }
-
-      .decision-button {
-        border-radius: 0.9rem;
-        border: 1px solid rgba(99, 102, 241, 0.2);
-        background: linear-gradient(135deg, rgba(199, 210, 254, 0.35), rgba(59, 130, 246, 0.25));
-        padding: 0.6rem 1rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-      }
-
-      .decision-button:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 18px 30px rgba(99, 102, 241, 0.25);
-      }
-
-      .decision-button:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-      }
-
-      .floating-spark {
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        border-radius: 9999px;
-        background: rgba(255, 255, 255, 0.6);
-        animation: spark 6s linear infinite;
-      }
-
-      @keyframes spark {
-        from {
-          transform: translate3d(0, 0, 0) scale(1);
-          opacity: 0.8;
-        }
-        to {
-          transform: translate3d(120px, -220px, 0) scale(0);
-          opacity: 0;
-        }
       }
     </style>
   </head>
-  <body class="min-h-full bg-transparent">
-    <div id="app" class="min-h-full"></div>
+  <body class="min-h-full bg-transparent text-slate-900">
+    <div id="root" class="min-h-full"></div>
 
-    <script>
+    <!-- CDNs para React, ReactDOM, Babel e Lucide React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/lucide-react@0.344.0/dist/lucide-react.umd.js"
+    ></script>
+
+    <!-- O código principal da aplicação React (JSX) -->
+    <script type="text/babel" data-presets="env,react">
+      const { useEffect, useMemo, useState } = React;
+      // Componente de fallback para ícones, caso o Lucide não carregue
+      const fallbackIcon = (emoji, label) => ({ className = "", style = {}, ...rest }) => (
+        <span
+          role="img"
+          aria-label={label}
+          className={className}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            ...style,
+          }}
+          {...rest}
+        >
+          {emoji}
+        </span>
+      );
+
+      // Carregando ícones do Lucide React
+      const lucide = window.lucideReact || window.lucide || {};
+      if (!Object.keys(lucide).length) {
+        console.warn(
+          "[AcademiaCK3] lucide-react UMD não foi carregado. Ícones serão exibidos com emojis de fallback."
+        );
+      }
+
+      const iconSource = lucide.default || lucide;
+
+      const {
+        Trophy = fallbackIcon("🏆", "troféu"),
+        Brain = fallbackIcon("🧠", "cérebro"),
+        Castle = fallbackIcon("🏰", "castelo"),
+        Shield = fallbackIcon("🛡️", "escudo"),
+        Swords = fallbackIcon("⚔️", "espadas"),
+        Scroll = fallbackIcon("📜", "pergaminho"),
+        HeartHandshake = fallbackIcon("🤝", "aliança"),
+        Crown = fallbackIcon("👑", "coroa"),
+        Network = fallbackIcon("🕸️", "rede"),
+        Building = fallbackIcon("🏗️", "construção"),
+        Settings = fallbackIcon("⚙️", "configurações"),
+        Target = fallbackIcon("🎯", "alvo"),
+        CheckCircle2 = fallbackIcon("✅", "concluído"),
+        XCircle = fallbackIcon("❌", "incorreto"),
+        ArrowRight = fallbackIcon("➡️", "avançar"),
+        ArrowLeft = fallbackIcon("⬅️", "voltar"),
+        Sparkles = fallbackIcon("✨", "brilho"),
+        BookOpen = fallbackIcon("📖", "livro"),
+        AlertTriangle = fallbackIcon("⚠️", "alerta"),
+        Star = fallbackIcon("⭐", "estrela"),
+        HelpCircle = fallbackIcon("❓", "ajuda"),
+        Layers = fallbackIcon("🗂️", "camadas"),
+        Lock = fallbackIcon("🔒", "bloqueado"),
+        Unlock = fallbackIcon("🔓", "desbloqueado"),
+        Sword = fallbackIcon("🗡️", "espada"),
+        Banknote = fallbackIcon("💵", "moeda"),
+        Church = fallbackIcon("⛪", "igreja"),
+        Users = fallbackIcon("🧑‍🤝‍🧑", "usuários"),
+        Coins = fallbackIcon("🪙", "moedas"),
+        Hammer = fallbackIcon("🔨", "martelo"),
+        ShieldQuestion = fallbackIcon("❓", "dúvida"),
+      } = iconSource;
+
+      // Componentes de UI
+      const Tag = ({ children }) => (
+        <span
+          className="inline-flex items-center gap-1 rounded-full bg-indigo-50 text-indigo-700 px-3 py-1 text-xs font-semibold border border-indigo-200 shadow-sm"
+        >
+          {children}
+        </span>
+      );
+
+      const Pill = ({ children }) => (
+        <span
+          className="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-medium border border-slate-200"
+        >
+          {children}
+        </span>
+      );
+
+      const Card = ({ children, className = "" }) => (
+        <div className={`glass-card rounded-3xl shadow-xl shadow-indigo-100/70 p-6 ${className}`}>
+          {children}
+        </div>
+      );
+
+      const SectionTitle = ({ icon: Icon, title, subtitle }) => (
+        <div className="flex items-start sm:items-center gap-3 mb-5">
+          {Icon && (
+            <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-rose-500 text-white shadow-lg shadow-indigo-200/80">
+              <Icon className="w-5 h-5" />
+            </div>
+          )}
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 leading-tight">{title}</h3>
+            {subtitle && <p className="text-sm text-slate-500 leading-snug">{subtitle}</p>}
+          </div>
+        </div>
+      );
+
+      // Dados do Jogo (Tradução e Estratégia)
       const LESSONS = {
         preparacao: {
           titulo: "Preparação Inicial",
-          emoji: "⚙️",
+          icone: Settings,
           passos: [
             {
-              titulo:
-                "Abrir cenário recomendado (1066 – William da Normandia)",
+              titulo: "Abrir cenário recomendado (1066 – William da Normandia)",
               acao: [
                 "Abrir o jogo → Um Jogador",
                 "Escolher data 1066 → Personagens Destacados → William da Normandia",
@@ -273,8 +206,7 @@
                 "Você é Governante (recursos), Estrategista (guerras) e Contador de Histórias (dinastia)",
                 "Sempre planeje 2 gerações à frente: herdeiro + neto",
               ],
-              dica:
-                "CK3 premia planejamento dinástico e escolhas com consequências (Estresse, contratos, fé).",
+              dica: "CK3 premia planejamento dinástico e escolhas com consequências (Estresse, contratos, fé).",
             },
           ],
           checklist: [
@@ -285,7 +217,7 @@
         },
         fundamentos: {
           titulo: "Fundamentos: Títulos e Vassalos",
-          emoji: "👑",
+          icone: Crown,
           passos: [
             {
               titulo: "Ver seus títulos",
@@ -333,7 +265,7 @@
         },
         economia: {
           titulo: "Economia e Territórios",
-          emoji: "🏗️",
+          icone: Building,
           passos: [
             {
               titulo: "Construções iniciais",
@@ -341,8 +273,7 @@
                 "Clique na sua capital (Condado) → 'Edifícios'",
                 "Priorize 'Fazenda & Campos' / prédios econômicos",
               ],
-              dica:
-                "Retorno seguro. Cada prédio econômico acelera todas as outras áreas.",
+              dica: "Retorno seguro. Cada prédio econômico acelera todas as outras áreas.",
             },
             {
               titulo: "Controle e Desenvolvimento",
@@ -366,9 +297,10 @@
             "≥ 200 de ouro em caixa",
           ],
         },
+
         guerra: {
           titulo: "Guerra e Exércitos",
-          emoji: "⚔️",
+          icone: Swords,
           passos: [
             {
               titulo: "Escolher alvo fraco",
@@ -395,8 +327,7 @@
                 "Antes da guerra: contrate mercenários baratos por 3 anos",
                 "Inicie a guerra com superioridade tática",
               ],
-              dica:
-                "Compra tempo e vitórias no início. Ouro vira território.",
+              dica: "Compra tempo e vitórias no início. Ouro vira território.",
             },
             {
               titulo: "Simulação de Erro: suprimento",
@@ -414,9 +345,10 @@
             "Linha de suprimento intacta",
           ],
         },
+
         intriga: {
           titulo: "Intriga e Segredos",
-          emoji: "🕵️",
+          icone: Brain,
           passos: [
             {
               titulo: "Esquemas",
@@ -451,9 +383,10 @@
             "Rede de cúmplices ≥ 2 em esquema crítico",
           ],
         },
+
         religiao: {
           titulo: "Religião e Cultura",
-          emoji: "⛪",
+          icone: Church,
           passos: [
             {
               titulo: "Criar/Modificar Fé (uso estratégico)",
@@ -480,9 +413,10 @@
             "Progresso de inovação monitorado",
           ],
         },
+
         dinastia: {
-          titulo: "Dinastia & Sucessão",
-          emoji: "🕸️",
+          titulo: "Dinastia, Sucessão e Reconhecimento",
+          icone: Network,
           passos: [
             {
               titulo: "Legados Dinásticos",
@@ -514,19 +448,18 @@
             },
             {
               titulo: "Gestão de Facções",
-              acao: [
-                "Aba 'Facções' → identifique líder → suborne, negocie ou prenda",
-              ],
+              acao: ["Aba 'Facções' → identifique líder → suborne, negocie ou prenda"],
               dica: "Quebre a liderança da facção para esvaziá-la.",
             },
           ],
           checklist: [
             "2 legados comprados até ano 50",
-            "Herdeiro com traço herdável",
+            "Herdeiro com traço herdável de nível 2+",
             "Facções com força < 80%",
           ],
         },
       };
+
 
       const QUIZ = {
         diagnostico: [
@@ -569,23 +502,13 @@
         fundamentos: [
           {
             q: "Onde você vê os seus títulos e seus vassalos principais?",
-            a: [
-              "Aba Militar",
-              "Retrato do governante",
-              "Mapa de decisões",
-              "Painel de reino (tecla F7)",
-            ],
+            a: ["Aba Militar", "Retrato do governante", "Mapa de decisões", "Painel de reino (tecla F7)"],
             c: 1,
             exp: "Clique no retrato para Títulos e Vassalos. É o hub do governante.",
           },
           {
             q: "O que fazer com um vassalo poderoso e opinião -40?",
-            a: [
-              "Ignorar",
-              "Convidar para o Conselho ou melhorar contrato/relacionamento",
-              "Revogar título imediatamente",
-              "Declarar guerra",
-            ],
+            a: ["Ignorar", "Convidar para o Conselho ou melhorar contrato/relacionamento", "Revogar título imediatamente", "Declarar guerra"],
             c: 1,
             exp: "Poderosos preferem cargos. Alternativas: presentes, casamento, contrato.",
           },
@@ -593,12 +516,7 @@
         economia: [
           {
             q: "Primeiro prédio recomendado ao início em capital fértil:",
-            a: [
-              "Quartéis pesados",
-              "Fazenda & Campos / produção de ouro",
-              "Erguimento de muralhas máximas",
-              "Igreja",
-            ],
+            a: ["Quartéis pesados", "Fazenda & Campos / produção de ouro", "Erguimento de muralhas máximas", "Igreja"],
             c: 1,
             exp: "Econômicos geram efeito composto. Muralhas surgem depois.",
           },
@@ -628,26 +546,17 @@
             exp: "Sem suprimento, seu exército se desfaz e perde moral rapidamente.",
           },
         ],
+
         intriga: [
           {
             q: "Como transformar um segredo em vantagem econômica/política?",
-            a: [
-              "Executar o alvo",
-              "Vender o segredo",
-              "Chantagear por Gancho e usar em contrato/decisão",
-              "Ignorar",
-            ],
+            a: ["Executar o alvo", "Vender o segredo", "Chantagear por Gancho e usar em contrato/decisão", "Ignorar"],
             c: 2,
             exp: "Gancho permite contrato sem custo, casamento forçado, pagamentos e favores.",
           },
           {
             q: "Por que 'Rapto' (Abdução) é poderoso?",
-            a: [
-              "Aumenta impostos",
-              "Captura alvos-chave e desmonta facções",
-              "Muda cultura",
-              "Reforma a fé",
-            ],
+            a: ["Aumenta impostos", "Captura alvos-chave e desmonta facções", "Muda cultura", "Reforma a fé"],
             c: 1,
             exp: "Sem líder/pretendente, a facção colapsa; abre negociações.",
           },
@@ -673,7 +582,7 @@
               "Apenas tributos",
             ],
             c: 1,
-            exp: "Classificações impactam casamentos e casus belli religiosos.",
+            exp: "Classificações (Reta/Desviada/Hostil/Maligna) impactam casamentos e CBs.",
           },
         ],
         dinastia: [
@@ -692,10 +601,12 @@
               "Para ganhar uma conquista secreta",
             ],
             c: 1,
-            exp: "Combina genética, matrimônios e leis para manter/expandir poder ao sucessor.",
+            exp:
+              "Combina genética, matrimônios e leis para manter/expandir poder ao sucessor.",
           },
         ],
       };
+
 
       const ERROR_SIMULATIONS = {
         guerra_sem_suprimento: {
@@ -752,1146 +663,619 @@
         },
       ];
 
-      const DECISOES = [
-        {
-          id: "banquete",
-          titulo: "Banquete dos Vassalos",
-          emoji: "🍷",
-          descricao:
-            "Convida toda a corte para um banquete luxuoso, reduzindo tensão e fortalecendo alianças locais.",
-          custo: 120,
-          efeitos: { ouro: -120, prestigio: 85, estresse: -10 },
-          textoSucesso: "A lealdade dos vassalos aumenta e rumores positivos se espalham pelo reino.",
-        },
-        {
-          id: "treino",
-          titulo: "Drills de Elite",
-          emoji: "🛡️",
-          descricao:
-            "Treinos intensivos com os campeões e homens de armas para preparar a investida na próxima guerra.",
-          custo: 60,
-          efeitos: { ouro: -60, tropas: 240, prestigio: 35 },
-          textoSucesso: "Suas tropas ganham moral e disciplina. Os rivais ficam atentos às movimentações.",
-        },
-        {
-          id: "conselho",
-          titulo: "Conselho de Estratégia",
-          emoji: "📜",
-          descricao:
-            "Reúne conselheiros para revisar contratos, claims e rotas de comércio, destravando melhorias administrativas.",
-          custo: 0,
-          efeitos: { ouro: 90, piedade: 25 },
-          textoSucesso: "O tesouro encontra novas fontes de renda e o clero reconhece sua visão estratégica.",
-        },
-        {
-          id: "peregrinacao",
-          titulo: "Peregrinação curta",
-          emoji: "🕊️",
-          descricao:
-            "Visita relíquias locais para acalmar o espírito e inspirar o povo sem abandonar o trono por muito tempo.",
-          custo: 45,
-          efeitos: { ouro: -45, piedade: 70, estresse: -6 },
-          textoSucesso: "O povo se emociona com sua devoção e a corte recupera o foco.",
-        },
-      ];
 
-      const ALIADOS = [
-        {
-          nome: "Duquesa Matilda",
-          relacao: "Aliança defensiva",
-          poder: 82,
-          comentario: "Promete reforços em guerras contra reis franceses.",
-        },
-        {
-          nome: "Rei Harald Dentes-Azuis",
-          relacao: "Pacto de não agressão",
-          poder: 77,
-          comentario: "Atento à sua ascensão — mantenha presentes anuais.",
-        },
-        {
-          nome: "Conde Anjou",
-          relacao: "Ganho recente",
-          powerUp: true,
-          poder: 64,
-          comentario: "Apoio econômico garantido para expansões na Normandia.",
-        },
-      ];
+      // Componente de barra de progresso
+      const ProgressBar = ({ value, max = 100 }) => (
+        <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 transition-all duration-500"
+            style={{ width: `${Math.min(100, (value / max) * 100)}%` }}
+          />
+        </div>
+      );
 
-      const RUMORES = [
-        "Espiões relatam que uma facção saxã tenta financiar mercenários no norte.",
-        "Mercadores italianos oferecem desconto para contratos de longo prazo se fechar acordo esta estação.",
-        "O Papa observa sua fé reformada com curiosidade; manter piedade alta garantirá apoio futuro.",
-      ];
+      // Componente principal da aplicação
+      function AcademiaCK3() {
+        const [tela, setTela] = useState("boasvindas");
+        const [moduloAtivo, setModuloAtivo] = useState(null);
+        const [passo, setPasso] = useState(0);
+        const [progresso, setProgresso] = useState({});
+        const [nivel, setNivel] = useState(null);
+        const [diagnostico, setDiagnostico] = useState({ i: 0, acertos: 0, respostas: [] });
+        const [quiz, setQuiz] = useState({ i: 0, acertos: 0, resp: null, feedback: null });
+        const [dificuldade, setDificuldade] = useState("media");
+        const [revisaoPendente, setRevisaoPendente] = useState([]);
 
-      const PAINEL_TABS = [
-        { id: "status", titulo: "Status do Reino", emoji: "🛡️" },
-        { id: "economia", titulo: "Economia & Infra", emoji: "💰" },
-        { id: "diplomacia", titulo: "Diplomacia & Intrigas", emoji: "🤝" },
-      ];
-
-      const MODULOS = [
-        { id: "preparacao", nome: "Preparação", cor: "from-indigo-500 to-purple-600" },
-        { id: "fundamentos", nome: "Fundamentos", cor: "from-amber-500 to-orange-600" },
-        { id: "economia", nome: "Economia", cor: "from-emerald-500 to-teal-600" },
-        { id: "guerra", nome: "Guerra", cor: "from-rose-500 to-pink-600" },
-        { id: "intriga", nome: "Intriga", cor: "from-fuchsia-500 to-violet-600" },
-        { id: "religiao", nome: "Religião & Cultura", cor: "from-sky-500 to-cyan-600" },
-        { id: "dinastia", nome: "Dinastia & Sucessão", cor: "from-slate-500 to-gray-700" },
-      ];
-
-      const state = {
-        tela: "boasvindas",
-        moduloAtivo: null,
-        passo: 0,
-        progresso: {},
-        nivel: null,
-        diagnostico: { i: 0, acertos: 0 },
-        quiz: { i: 0, acertos: 0, respondeu: false, feedback: null, selecionada: null },
-        dificuldade: "média",
-        revisao: [],
-        painelReino: "status",
-        hud: {
-          ouro: 280,
-          prestigio: 1180,
-          piedade: 210,
-          tropas: 3200,
-          estresse: 18,
-          maxOuro: 800,
-          maxPrestigio: 2000,
-          maxPiedade: 800,
-          maxTropas: 6000,
-        },
-        eventos: [
-          {
-            tipo: "sucesso",
-            texto: "A corte comenta o potencial da Academia de Reis. Conclua o diagnóstico para desbloquear a sala de guerra.",
-            tempo: "08:00",
-          },
-          {
-            tipo: "info",
-            texto: "Os conselheiros aguardam suas instruções no painel do reino.",
-            tempo: "08:05",
-          },
-        ],
-      };
-
-      const app = document.getElementById("app");
-
-      function setState(partial) {
-        Object.assign(state, partial);
-        render();
-      }
-
-      function formatarNumero(valor) {
-        return Math.round(valor).toLocaleString("pt-BR");
-      }
-
-      function percentual(valor, maximo) {
-        if (!maximo) return 0;
-        return Math.min(100, Math.max(0, (valor / maximo) * 100));
-      }
-
-      function registrarEvento(texto, tipo = "info") {
-        const tempo = new Date().toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        state.eventos = [{ texto, tipo, tempo }, ...state.eventos].slice(0, 7);
-      }
-
-      function ajustarHud(delta = {}) {
-        const hud = state.hud;
-        if (typeof delta.ouro === "number") {
-          hud.ouro = Math.min(hud.maxOuro, Math.max(0, hud.ouro + delta.ouro));
-        }
-        if (typeof delta.prestigio === "number") {
-          hud.prestigio = Math.min(
-            hud.maxPrestigio,
-            Math.max(0, hud.prestigio + delta.prestigio)
-          );
-        }
-        if (typeof delta.piedade === "number") {
-          hud.piedade = Math.min(
-            hud.maxPiedade,
-            Math.max(0, hud.piedade + delta.piedade)
-          );
-        }
-        if (typeof delta.tropas === "number") {
-          hud.tropas = Math.min(hud.maxTropas, Math.max(0, hud.tropas + delta.tropas));
-        }
-        if (typeof delta.estresse === "number") {
-          hud.estresse = Math.min(100, Math.max(0, hud.estresse + delta.estresse));
-        }
-      }
-
-      function mudarPainelReino(id) {
-        state.painelReino = id;
-        render();
-      }
-
-      function executarDecisao(id) {
-        const decisao = DECISOES.find((d) => d.id === id);
-        if (!decisao) return;
-        const custo = decisao.custo || 0;
-        if (custo > 0 && state.hud.ouro < custo) {
-          registrarEvento(
-            `Tesouro insuficiente para executar '${decisao.titulo}'. Reforce sua economia primeiro.`,
-            "alerta"
-          );
-          render();
-          return;
-        }
-        ajustarHud({ ...decisao.efeitos });
-        registrarEvento(decisao.textoSucesso, "sucesso");
-        render();
-      }
-
-      function limparEventos() {
-        state.eventos = [];
-        render();
-      }
-
-      function iniciarDiagnostico() {
-        state.tela = "diagnostico";
-        state.diagnostico = { i: 0, acertos: 0 };
-        render();
-      }
-
-      function responderDiagnostico(idx) {
-        const pergunta = QUIZ.diagnostico[state.diagnostico.i];
-        if (!pergunta) return;
-        if (idx === pergunta.c) {
-          state.diagnostico.acertos += 1;
-        }
-        state.diagnostico.i += 1;
-        if (state.diagnostico.i >= QUIZ.diagnostico.length) {
-          const pct = state.diagnostico.acertos / QUIZ.diagnostico.length;
-          state.nivel = pct >= 0.8 ? "avançado" : pct >= 0.6 ? "intermediário" : "iniciante";
-          state.tela = "resultado-diagnostico";
-        }
-        render();
-      }
-
-      function abrirModulo(id) {
-        state.moduloAtivo = id;
-        state.tela = "licao";
-        state.passo = 0;
-        state.quiz = { i: 0, acertos: 0, respondeu: false, feedback: null, selecionada: null };
-        if (state.nivel === "avançado") state.dificuldade = "difícil";
-        else if (state.nivel === "intermediário") state.dificuldade = "média";
-        else state.dificuldade = "fácil";
-        render();
-      }
-
-      function irParaPratica() {
-        state.tela = "pratica";
-        render();
-      }
-
-      function responderQuiz(idx) {
-        if (state.quiz.respondeu) return;
-        const banco = QUIZ[state.moduloAtivo] || [];
-        const pergunta = banco[state.quiz.i];
-        if (!pergunta) return;
-        const correto = idx === pergunta.c;
-        if (correto) state.quiz.acertos += 1;
-        state.quiz.respondeu = true;
-        state.quiz.selecionada = idx;
-        state.quiz.feedback = {
-          correto,
-          texto: pergunta.exp,
-        };
-        atualizarDificuldade();
-        render();
-      }
-
-      function atualizarDificuldade() {
-        const respondidas = state.quiz.i + 1;
-        if (respondidas % 3 !== 0) return;
-        const taxa = state.quiz.acertos / respondidas;
-        if (taxa >= 0.8 && state.dificuldade !== "difícil") {
-          state.dificuldade = state.dificuldade === "fácil" ? "média" : "difícil";
-        }
-        if (taxa < 0.5 && state.dificuldade !== "fácil") {
-          state.dificuldade = state.dificuldade === "difícil" ? "média" : "fácil";
-        }
-      }
-
-      function proximaQuestao() {
-        const banco = QUIZ[state.moduloAtivo] || [];
-        if (!banco.length || state.quiz.i >= banco.length - 1) {
-          concluirModulo();
-          return;
-        }
-        state.quiz.i += 1;
-        state.quiz.respondeu = false;
-        state.quiz.feedback = null;
-        state.quiz.selecionada = null;
-        render();
-      }
-
-      function concluirModulo() {
-        const banco = QUIZ[state.moduloAtivo] || [];
-        const respondidas = Math.max(1, state.quiz.i + (state.quiz.respondeu ? 1 : 0));
-        const desempenho = state.quiz.acertos / respondidas;
-        const estrelas = Math.max(1, Math.round(desempenho * 5));
-        state.progresso[state.moduloAtivo] = { feito: true, estrelas };
-        if (desempenho < 0.8 && !state.revisao.includes(state.moduloAtivo)) {
-          state.revisao.push(state.moduloAtivo);
-        }
-        if (desempenho >= 0.8) {
-          state.revisao = state.revisao.filter((m) => m !== state.moduloAtivo);
-        }
-        const bonusBase = { ouro: 40, prestigio: 55, piedade: 20, tropas: 80, estresse: -4 };
-        const ajustes = {
-          preparacao: { prestigio: 25, tropas: 60 },
-          fundamentos: { prestigio: 35 },
-          economia: { ouro: 120, prestigio: 15 },
-          guerra: { tropas: 260, prestigio: 60 },
-          intriga: { prestigio: 45 },
-          religiao: { piedade: 90, estresse: -6 },
-          dinastia: { prestigio: 80, piedade: 35 },
-        };
-        const bonus = { ...bonusBase };
-        const extra = ajustes[state.moduloAtivo] || {};
-        Object.entries(extra).forEach(([key, val]) => {
-          bonus[key] = (bonus[key] || 0) + val;
-        });
-        ajustarHud(bonus);
-        registrarEvento(
-          `${LESSONS[state.moduloAtivo].titulo} concluído com ${estrelas}★. Recursos do reino atualizados.`,
-          desempenho >= 0.8 ? "sucesso" : "info"
+        // Definição dos módulos
+        const MODULOS = useMemo(
+          () => [
+            { id: "preparacao", nome: "Preparação", icone: Settings, cor: "from-indigo-500 to-purple-600" },
+            { id: "fundamentos", nome: "Fundamentos", icone: Crown, cor: "from-amber-500 to-orange-600" },
+            { id: "economia", nome: "Economia", icone: Building, cor: "from-emerald-500 to-teal-600" },
+            { id: "guerra", nome: "Guerra", icone: Swords, cor: "from-rose-500 to-pink-600" },
+            { id: "intriga", nome: "Intriga", icone: Brain, cor: "from-fuchsia-500 to-violet-600" },
+            { id: "religiao", nome: "Religião & Cultura", icone: Church, cor: "from-sky-500 to-cyan-600" },
+            { id: "dinastia", nome: "Dinastia & Sucessão", icone: Network, cor: "from-slate-500 to-gray-700" },
+          ],
+          []
         );
-        state.tela = "modulo-concluido";
-        render();
-      }
 
-      function voltarGrade() {
-        state.tela = "grade";
-        render();
-      }
+        // Lógica de dificuldade adaptativa
+        useEffect(() => {
+          if (!moduloAtivo || quiz.i === 0) return;
+          // Ajusta a dificuldade a cada 3 questões
+          if (quiz.i % 3 !== 0) return;
+          const taxa = quiz.acertos / quiz.i;
 
-      function voltarLicoes() {
-        state.tela = "licao";
-        render();
-      }
+          setDificuldade((nivelAtual) => {
+            if (taxa >= 0.8 && nivelAtual !== "dificil") {
+              return nivelAtual === "facil" ? "media" : "dificil";
+            }
+            if (taxa < 0.5 && nivelAtual !== "facil") {
+              return nivelAtual === "dificil" ? "media" : "facil";
+            }
+            return nivelAtual;
+          });
+        }, [quiz.i, quiz.acertos, moduloAtivo]);
 
-      function avancarPasso() {
-        const total = LESSONS[state.moduloAtivo].passos.length;
-        if (state.passo < total - 1) {
-          state.passo += 1;
-          render();
-        }
-      }
+        // Funções de navegação e estado
+        const iniciarDiagnostico = () => {
+          setTela("diagnostico");
+          setDiagnostico({ i: 0, acertos: 0, respostas: [] });
+        };
 
-      function voltarPasso() {
-        if (state.passo > 0) {
-          state.passo -= 1;
-          render();
-        }
-      }
+        const responderDiagnostico = (idx) => {
+          const cur = QUIZ.diagnostico[diagnostico.i];
+          const correto = idx === cur.c;
+          const novo = {
+            i: diagnostico.i + 1,
+            acertos: diagnostico.acertos + (correto ? 1 : 0),
+            respostas: [...diagnostico.respostas, { certo: correto }],
+          };
 
-      function renderHudBar() {
-        if (state.tela === "boasvindas") return "";
-        const { ouro, prestigio, piedade, tropas, estresse, maxOuro, maxPrestigio, maxPiedade, maxTropas } =
-          state.hud;
-        const statusEstresse =
-          estresse < 25 ? "Tranquilo" : estresse < 55 ? "Atento" : estresse < 80 ? "Alerta" : "Limite";
-        return `
-          <div class="mt-4 grid gap-4 md:grid-cols-5">
-            <div class="hud-tile">
-              <div class="flex items-center justify-between">
-                <div class="text-xs uppercase tracking-wider text-white/70">Tesouro</div>
-                <div class="text-lg font-bold text-amber-300">${formatarNumero(ouro)}</div>
-              </div>
-              <div class="hud-meter"><span style="width: ${percentual(ouro, maxOuro)}%; background: linear-gradient(90deg, #fbbf24, #f97316);"></span></div>
-              <div class="mt-2 text-xs text-white/70">Capacidade ${formatarNumero(maxOuro)}</div>
-            </div>
-            <div class="hud-tile">
-              <div class="flex items-center justify-between">
-                <div class="text-xs uppercase tracking-wider text-white/70">Prestígio</div>
-                <div class="text-lg font-bold text-violet-200">${formatarNumero(prestigio)}</div>
-              </div>
-              <div class="hud-meter"><span style="width: ${percentual(prestigio, maxPrestigio)}%; background: linear-gradient(90deg, #a855f7, #6366f1);"></span></div>
-              <div class="mt-2 text-xs text-white/70">Próximo legado em ${formatarNumero(Math.max(0, maxPrestigio - prestigio))}</div>
-            </div>
-            <div class="hud-tile">
-              <div class="flex items-center justify-between">
-                <div class="text-xs uppercase tracking-wider text-white/70">Piedade</div>
-                <div class="text-lg font-bold text-sky-200">${formatarNumero(piedade)}</div>
-              </div>
-              <div class="hud-meter"><span style="width: ${percentual(piedade, maxPiedade)}%; background: linear-gradient(90deg, #38bdf8, #0ea5e9);"></span></div>
-              <div class="mt-2 text-xs text-white/70">Influência com o clero preservada</div>
-            </div>
-            <div class="hud-tile">
-              <div class="flex items-center justify-between">
-                <div class="text-xs uppercase tracking-wider text-white/70">Exércitos</div>
-                <div class="text-lg font-bold text-emerald-200">${formatarNumero(tropas)}</div>
-              </div>
-              <div class="hud-meter"><span style="width: ${percentual(tropas, maxTropas)}%; background: linear-gradient(90deg, #34d399, #10b981);"></span></div>
-              <div class="mt-2 text-xs text-white/70">Limite atual ${formatarNumero(maxTropas)}</div>
-            </div>
-            <div class="hud-tile">
-              <div class="flex items-center justify-between">
-                <div class="text-xs uppercase tracking-wider text-white/70">Estresse</div>
-                <div class="text-lg font-bold text-rose-200">${estresse}</div>
-              </div>
-              <div class="hud-meter"><span style="width: ${percentual(estresse, 100)}%; background: linear-gradient(90deg, #f87171, #ef4444);"></span></div>
-              <div class="mt-2 text-xs text-white/70">Estado: ${statusEstresse}</div>
-            </div>
-          </div>
-        `;
-      }
+          if (novo.i >= QUIZ.diagnostico.length) {
+            const pct = novo.acertos / QUIZ.diagnostico.length;
+            const lvl = pct >= 0.8 ? "avancado" : pct >= 0.6 ? "intermediario" : "iniciante";
+            setNivel(lvl);
+            setTela("resultado-diagnostico");
+            setDiagnostico(novo);
+          } else {
+            setDiagnostico(novo);
+          }
+        };
 
-      function renderHeader(showHud = true) {
-        return `
-          <header class="sticky top-0 z-10 fancy-gradient text-white px-6 py-4 shadow-xl shadow-indigo-500/20">
-            <div class="max-w-6xl mx-auto">
-              <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div class="flex items-center gap-3 text-lg font-semibold tracking-wide">
-                  <span class="emoji-icon bg-white/20 rounded-xl p-2">🏰</span>
-                  <span>Academia de Reis — Instrutor Mestre CK3</span>
+        const abrirModulo = (id) => {
+          setModuloAtivo(id);
+          setTela("licao");
+          setPasso(0);
+          setQuiz({ i: 0, acertos: 0, resp: null, feedback: null });
+
+          // Inicializa a dificuldade com base no nível do diagnóstico
+          if (nivel === "avancado") setDificuldade("dificil");
+          else if (nivel === "intermediario") setDificuldade("media");
+          else setDificuldade("facil");
+        };
+
+        const concluirModulo = (desempenho = 0.7) => {
+          const estrelas = Math.max(1, Math.round(desempenho * 5));
+          setProgresso((prev) => ({ ...prev, [moduloAtivo]: { feito: true, estrelas } }));
+
+          // Adiciona ou remove módulo da revisão pendente
+          if (desempenho < 0.8) {
+            setRevisaoPendente((lista) => Array.from(new Set([...lista, moduloAtivo])));
+          } else {
+            setRevisaoPendente((lista) => lista.filter((m) => m !== moduloAtivo));
+          }
+
+          setTela("modulo-concluido");
+        };
+
+        const enviarRespostaQuiz = (idx) => {
+          const banco = QUIZ[moduloAtivo] || [];
+          const cur = banco[quiz.i];
+          if (!cur) {
+            concluirModulo(quiz.i === 0 ? 0 : quiz.acertos / quiz.i);
+            return;
+          }
+
+          const correto = idx === cur.c;
+          const feedback = correto
+            ? { tipo: "ok", titulo: "Perfeito!", texto: cur.exp }
+            : { tipo: "erro", titulo: "Quase lá!", texto: cur.exp };
+
+          setQuiz((prev) => ({
+            i: prev.i + 1,
+            acertos: prev.acertos + (correto ? 1 : 0),
+            resp: idx,
+            feedback,
+          }));
+        };
+
+        const proximaQuestao = () => {
+          const banco = QUIZ[moduloAtivo] || [];
+          if (quiz.i >= banco.length) {
+            concluirModulo(quiz.i === 0 ? 0 : quiz.acertos / quiz.i);
+            return;
+          }
+
+          setQuiz((prev) => ({ ...prev, resp: null, feedback: null }));
+        };
+
+        // Componente do cabeçalho
+        const Header = () => (
+          <header className="sticky top-0 z-40 backdrop-blur-lg bg-gradient-to-r from-indigo-600/95 via-violet-600/95 to-purple-600/95 text-white px-6 py-4 shadow-lg shadow-indigo-400/30">
+            <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-white/20 shadow-inner">
+                  <Castle className="w-6 h-6" />
                 </div>
-                <div class="flex flex-wrap gap-4 text-sm">
-                  <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
-                    <span class="emoji-icon">⭐</span>
-                    <span>Nível: ${state.nivel ? state.nivel : "—"}</span>
-                  </div>
-                  <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
-                    <span class="emoji-icon">🎯</span>
-                    <span>Dificuldade: ${state.dificuldade}</span>
-                  </div>
+                <div>
+                  <span className="font-bold tracking-wide text-lg">Academia de Reis — Instrutor Mestre CK3</span>
+                  <p className="text-xs text-white/80">Aprenda Crusader Kings 3 com táticas guiadas, checklists e simulações.</p>
                 </div>
               </div>
-              ${showHud ? renderHudBar() : ""}
+              <div className="flex flex-wrap items-center gap-3 text-sm opacity-95">
+                <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
+                  <Star className="w-4 h-4" />
+                  <span>Nível: {nivel ? nivel : "—"}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
+                  <Target className="w-4 h-4" />
+                  <span>Dificuldade: {dificuldade}</span>
+                </div>
+              </div>
             </div>
           </header>
-        `;
-      }
-
-      function renderBoasVindas() {
-        return `
-          <div class="min-h-screen fancy-gradient text-white relative overflow-hidden">
-            <span class="floating-spark" style="top: 70%; left: 12%; animation-delay: 1s;"></span>
-            <span class="floating-spark" style="top: 55%; left: 45%; animation-delay: 2s;"></span>
-            <span class="floating-spark" style="top: 82%; left: 78%; animation-delay: 3s;"></span>
-            ${renderHeader(false)}
-            <main class="max-w-5xl mx-auto px-6 py-16 text-center">
-              <div class="mb-10">
-                <div class="mx-auto w-24 h-24 rounded-full bg-white/10 flex items-center justify-center text-5xl shadow-lg shadow-purple-500/50">
-                  ✨
-                </div>
-              </div>
-              <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
-                Bem-vindo à Academia de Reis
-              </h1>
-              <p class="text-lg md:text-xl text-white/90 max-w-3xl mx-auto">
-                Treine como um grande monarca: interface guiada, métodos avançados e a sensação de comandar um reino direto do navegador.
-              </p>
-              <div class="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
-                <button data-action="iniciar-diagnostico" class="px-6 py-3 rounded-2xl bg-yellow-400 text-indigo-900 font-bold shadow-xl shadow-yellow-500/50 hover:scale-105 transition">
-                  Iniciar Diagnóstico
-                </button>
-                <button data-action="ver-modulos" class="px-6 py-3 rounded-2xl border border-white/30 bg-white/10 hover:bg-white/20 transition">
-                  Entrar na Sala de Guerra
-                </button>
-              </div>
-              <div class="mt-14 grid gap-6 md:grid-cols-3 text-left">
-                <div class="glass-card rounded-3xl p-6">
-                  <div class="text-3xl">🧭</div>
-                  <h3 class="mt-3 text-lg font-semibold">Roteiro clica-a-clique</h3>
-                  <p class="text-sm text-white/80">Sequências precisas para navegar menus em PT-BR, com checkpoints automáticos.</p>
-                  <div class="mt-3 text-xs uppercase tracking-widest text-white/60">HUD dinástico</div>
-                  <div class="text-sm text-white/80">Interface inspirada no CK3, adaptada para estudo rápido.</div>
-                </div>
-                <div class="glass-card rounded-3xl p-6">
-                  <div class="text-3xl">🧠</div>
-                  <h3 class="mt-3 text-lg font-semibold">Prática adaptativa</h3>
-                  <p class="text-sm text-white/80">Quizzes inteligentes, simulações de erro e revisão guiada para fixar decisões.</p>
-                  <div class="mt-3 text-xs uppercase tracking-widest text-white/60">IA do instrutor</div>
-                  <div class="text-sm text-white/80">Dificuldade ajusta sozinha conforme seus acertos.</div>
-                </div>
-                <div class="glass-card rounded-3xl p-6">
-                  <div class="text-3xl">🏰</div>
-                  <h3 class="mt-3 text-lg font-semibold">Dinastia viva</h3>
-                  <p class="text-sm text-white/80">Casamentos genéticos, reformas de fé e contratos otimizados em listas prontas.</p>
-                  <div class="mt-3 text-xs uppercase tracking-widest text-white/60">Controle total</div>
-                  <div class="text-sm text-white/80">Painéis, decisões de corte e log de eventos em tempo real.</div>
-                </div>
-              </div>
-              <div class="mt-14 text-left">
-                <div class="holo-card p-6">
-                  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                    <div>
-                      <div class="text-xs uppercase tracking-widest text-white/60">Prévia do quartel-general</div>
-                      <h3 class="text-2xl font-semibold text-white">Painel estratégico interativo</h3>
-                      <p class="text-sm text-white/80 max-w-xl">Assim que iniciar, você ganha acesso ao HUD dinástico com recursos, decisões rápidas e eventos que respondem às suas escolhas.</p>
-                    </div>
-                    <div class="grid gap-3 text-left md:w-72">
-                      <div class="hud-tile">
-                        <div class="flex items-center justify-between text-sm">
-                          <span class="text-white/70">Tesouro previsto</span>
-                          <span class="text-yellow-300 font-semibold">280</span>
-                        </div>
-                        <div class="hud-meter"><span style="width: 65%; background: linear-gradient(90deg, #fbbf24, #f97316);"></span></div>
-                        <div class="mt-2 text-xs text-white/60">Reserve ouro antes das campanhas</div>
-                      </div>
-                      <div class="hud-tile">
-                        <div class="flex items-center justify-between text-sm">
-                          <span class="text-white/70">Próxima decisão</span>
-                          <span class="text-purple-200 font-semibold">Conselho de Estratégia</span>
-                        </div>
-                        <div class="hud-meter"><span style="width: 80%; background: linear-gradient(90deg, #a855f7, #6366f1);"></span></div>
-                        <div class="mt-2 text-xs text-white/60">Melhore contratos e claims</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </main>
-          </div>
-        `;
-      }
-
-      function renderPainelReino() {
-        const tabs = PAINEL_TABS.map(
-          (tab) => `
-            <button data-action="mudar-painel" data-painel="${tab.id}" class="tab-button" data-active="${
-              state.painelReino === tab.id
-            }">
-              <span>${tab.emoji}</span>
-              <span>${tab.titulo}</span>
-            </button>
-          `
-        ).join(" ");
-
-        const concluidos = Object.values(state.progresso).filter((p) => p?.feito).length;
-        const totalEstrelas = Object.values(state.progresso).reduce(
-          (acc, cur) => acc + (cur?.estrelas || 0),
-          0
         );
-        const mediaEstrelas = concluidos ? (totalEstrelas / concluidos).toFixed(1) : "0.0";
-        const proximoModulo = MODULOS.find((m) => !state.progresso[m.id]?.feito);
-        const proximoNome = proximoModulo ? LESSONS[proximoModulo.id].titulo : "Todos concluídos";
-        const progressoPercentual = Math.round((concluidos / MODULOS.length) * 100);
 
-        let conteudo = "";
-        if (state.painelReino === "status") {
-          conteudo = `
-            <div class="grid gap-4 md:grid-cols-3 text-white/90">
-              <div class="intel-card">
-                <div class="text-xs uppercase tracking-widest text-sky-200/80">Progresso geral</div>
-                <div class="text-2xl font-semibold">${concluidos}/${MODULOS.length} módulos</div>
-                <p class="text-sm text-slate-200/80">Conclusão ${progressoPercentual}% do plano mestre.</p>
-              </div>
-              <div class="intel-card">
-                <div class="text-xs uppercase tracking-widest text-emerald-200/80">Qualidade</div>
-                <div class="text-2xl font-semibold">${mediaEstrelas} ★</div>
-                <p class="text-sm text-slate-200/80">Média das estrelas obtidas por módulo concluído.</p>
-              </div>
-              <div class="intel-card">
-                <div class="text-xs uppercase tracking-widest text-fuchsia-200/80">Próxima prioridade</div>
-                <div class="text-lg font-semibold">${proximoNome}</div>
-                <p class="text-sm text-slate-200/80">Desbloqueia novos painéis e decisões especiais.</p>
-              </div>
-            </div>
-            <div class="grid gap-4 md:grid-cols-2 text-white/90">
-              <div class="intel-card">
-                <strong>Revisões pendentes:</strong>
-                <p class="text-sm mt-1">${
-                  state.revisao.length
-                    ? `${state.revisao.length} módulo(s) aguardando reforço.`
-                    : "Nenhuma revisão necessária. Continue avançando!"
-                }</p>
-              </div>
-              <div class="intel-card">
-                <strong>Eventos recentes:</strong>
-                <p class="text-sm mt-1">${state.eventos[0]?.texto || "Complete um módulo para gerar relatórios dinásticos."}</p>
-              </div>
-            </div>
-          `;
-        } else if (state.painelReino === "economia") {
-          const receita = Math.round(state.hud.ouro / 12) + 18;
-          const manutencao = Math.round(state.hud.tropas / 75) + 25;
-          conteudo = `
-            <div class="grid gap-4 md:grid-cols-3 text-white/90">
-              <div class="intel-card">
-                <div class="text-xs uppercase tracking-widest text-amber-200/80">Receita mensal</div>
-                <div class="text-2xl font-semibold">${formatarNumero(receita)} ouro</div>
-                <p class="text-sm text-slate-200/80">Estimativa com base em impostos atuais e contratos revisados.</p>
-              </div>
-              <div class="intel-card">
-                <div class="text-xs uppercase tracking-widest text-rose-200/80">Manutenção militar</div>
-                <div class="text-2xl font-semibold">${formatarNumero(manutencao)} ouro</div>
-                <p class="text-sm text-slate-200/80">Inclui homens de armas, campeões e guardas pessoais.</p>
-              </div>
-              <div class="intel-card">
-                <div class="text-xs uppercase tracking-widest text-emerald-200/80">Projetos ativos</div>
-                <div class="text-lg font-semibold">${
-                  state.progresso.economia?.feito ? "Construções avançadas liberadas" : "Economia básica em curso"
-                }</div>
-                <p class="text-sm text-slate-200/80">Gerencie fazendas, portos e tributos urbanos para crescer.</p>
-              </div>
-            </div>
-            <div class="intel-card text-white/90">
-              <strong>Recomendações do conselho:</strong>
-              <ul class="list-disc ml-5 text-sm mt-2 space-y-1">
-                <li>Finalize ao menos um prédio econômico antes de declarar novas guerras.</li>
-                <li>Ajuste contratos com ganchos obtidos em Intriga para reforçar o tesouro.</li>
-                <li>Mantenha ${formatarNumero(Math.max(200, state.hud.ouro))} de ouro reservado para emergências.</li>
-              </ul>
-            </div>
-          `;
-        } else {
-          const aliados = ALIADOS.map(
-            (aliado) => `
-              <div class="flex items-start gap-3">
-                <div class="text-2xl">${aliado.powerUp ? "✨" : "🤝"}</div>
-                <div>
-                  <div class="font-semibold text-white">${aliado.nome}</div>
-                  <div class="text-xs text-white/70 uppercase tracking-widest">${aliado.relacao} · Força ${aliado.poder}</div>
-                  <p class="text-sm text-white/80">${aliado.comentario}</p>
-                </div>
-              </div>
-            `
-          ).join("<hr class='border-white/10 my-3' />");
-
-          const rumores = RUMORES.map((rumor) => `<li>${rumor}</li>`).join("");
-
-          conteudo = `
-            <div class="grid gap-4 md:grid-cols-2 text-white/90">
-              <div class="intel-card space-y-3">
-                <div class="text-xs uppercase tracking-widest text-emerald-200/80">Rede de aliados</div>
-                ${aliados}
-              </div>
-              <div class="intel-card">
-                <div class="text-xs uppercase tracking-widest text-sky-200/80">Rumores e intrigas</div>
-                <ul class="list-disc ml-4 text-sm space-y-2 mt-2">${rumores}</ul>
-              </div>
-            </div>
-          `;
-        }
-
-        return `
-          <section class="holo-card p-6 space-y-6 relative overflow-hidden">
-            <div class="flex flex-wrap gap-3">${tabs}</div>
-            ${conteudo}
-          </section>
-        `;
-      }
-
-      function renderDecisionConsole() {
-        const cards = DECISOES.map((decisao) => {
-          const bloqueado = decisao.custo > 0 && state.hud.ouro < decisao.custo;
-          return `
-            <div class="glass-card rounded-3xl p-5 space-y-3">
-              <div class="flex items-center justify-between">
-                <div class="text-3xl">${decisao.emoji}</div>
-                <span class="text-xs uppercase tracking-widest text-slate-500">${
-                  decisao.custo > 0
-                    ? `Custo: ${formatarNumero(decisao.custo)} ouro`
-                    : "Sem custo imediato"
-                }</span>
-              </div>
-              <h4 class="text-lg font-semibold text-slate-900">${decisao.titulo}</h4>
-              <p class="text-sm text-slate-600">${decisao.descricao}</p>
-              <button data-action="executar-decisao" data-decisao="${decisao.id}" class="decision-button" ${
-                bloqueado ? "disabled" : ""
-              }>
-                <span>⚡</span>
-                <span>${bloqueado ? "Ouro insuficiente" : "Executar decisão"}</span>
-              </button>
-            </div>
-          `;
-        }).join("");
-
-        return `
-          <section class="glass-card rounded-3xl p-6 space-y-4">
-            <div class="flex items-center gap-3">
-              <span class="emoji-icon">🗡️</span>
-              <div>
-                <h3 class="text-lg font-bold text-slate-900">Mesa de decisões rápidas</h3>
-                <p class="text-sm text-slate-600">Gaste ouro, prestígio ou piedade para obter bônus imediatos.</p>
-              </div>
-            </div>
-            <div class="grid gap-4 md:grid-cols-2">${cards}</div>
-          </section>
-        `;
-      }
-
-      function renderEventFeed() {
-        const eventos = state.eventos.length
-          ? state.eventos
-              .map(
-                (evt) => `
-                  <div class="event-entry" data-type="${evt.tipo}">
-                    <div class="text-xs text-slate-500">${evt.tempo}</div>
-                    <div class="text-sm font-semibold">${evt.texto}</div>
+        // Painel de seleção de módulos
+        const PainelModulos = () => (
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {MODULOS.map((m, idx) => {
+              const Icone = m.icone;
+              // Implementa o Gating: só pode abrir se o anterior foi concluído
+              const bloqueado = idx > 0 && !progresso[MODULOS[idx - 1].id]?.feito;
+              return (
+                <Card
+                  key={m.id}
+                  className={`transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl ${
+                    bloqueado ? "opacity-60" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className={`p-2 rounded-xl bg-gradient-to-br ${m.cor} text-white shadow-lg shadow-indigo-200/70`}>
+                      <Icone className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-slate-900 text-lg">{m.nome}</h4>
+                      <p className="text-xs text-slate-500">{LESSONS[m.id].titulo}</p>
+                    </div>
+                    {progresso[m.id]?.feito ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                    ) : (
+                      <Lock className="w-5 h-5 text-slate-300" />
+                    )}
                   </div>
-                `
-              )
-              .join("")
-          : '<p class="text-sm text-slate-600">Sem eventos recentes — conclua lições ou decisões para movimentar o reino.</p>';
-
-        return `
-          <section class="glass-card rounded-3xl p-6 space-y-4">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <span class="emoji-icon">📜</span>
-                <div>
-                  <h3 class="text-lg font-bold text-slate-900">Relatórios da corte</h3>
-                  <p class="text-sm text-slate-600">Registro vivo das suas decisões e resultados de módulos.</p>
-                </div>
-              </div>
-              <button data-action="limpar-eventos" class="text-xs uppercase tracking-widest text-indigo-500 hover:text-indigo-700">
-                Limpar
-              </button>
-            </div>
-            <div class="space-y-3 max-h-80 overflow-auto pr-1">${eventos}</div>
-          </section>
-        `;
-      }
-
-      function renderDiagnostic() {
-        const pergunta = QUIZ.diagnostico[state.diagnostico.i];
-        return `
-          <div class="min-h-screen bg-slate-50">
-            ${renderHeader()}
-            <main class="max-w-3xl mx-auto px-6 py-12">
-              <div class="glass-card rounded-3xl p-8 shadow-xl space-y-6">
-                <div class="flex flex-col gap-1">
-                  <span class="text-sm font-semibold text-indigo-500 uppercase tracking-wide">Teste de Diagnóstico</span>
-                  <h2 class="text-2xl font-bold text-slate-900">Questão ${state.diagnostico.i + 1} de ${QUIZ.diagnostico.length}</h2>
-                </div>
-                <p class="text-lg font-semibold text-slate-900">${pergunta.q}</p>
-                <div class="grid gap-3 md:grid-cols-2">
-                  ${pergunta.a
-                    .map(
-                      (alt, idx) => `
-                        <button data-action="responder-diagnostico" data-index="${idx}" class="text-left px-4 py-3 rounded-2xl border border-slate-200 hover:bg-slate-100 transition">
-                          ${alt}
-                        </button>
-                      `
-                    )
-                    .join("")}
-                </div>
-              </div>
-            </main>
+                  <div className="mb-4">
+                    <ProgressBar value={(progresso[m.id]?.estrelas || 0) * 20} />
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2 text-slate-600">
+                      <Star className={`w-4 h-4 ${progresso[m.id]?.feito ? "text-yellow-500" : "text-slate-300"}`} />
+                      <span>{progresso[m.id]?.estrelas || 0} / 5</span>
+                    </div>
+                    <button
+                      disabled={bloqueado}
+                      onClick={() => abrirModulo(m.id)}
+                      className={`px-3 py-1.5 rounded-lg font-semibold text-white transition shadow-lg ${
+                        bloqueado
+                          ? "bg-slate-300 cursor-not-allowed shadow-none"
+                          : "bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
+                      }`}
+                    >
+                      {progresso[m.id]?.feito ? "Revisar" : "Começar"}
+                    </button>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
-        `;
-      }
-
-      function renderResultadoDiagnostico() {
-        const pct = Math.round(
-          (state.diagnostico.acertos / QUIZ.diagnostico.length) * 100
         );
-        return `
-          <div class="min-h-screen bg-slate-50">
-            ${renderHeader()}
-            <main class="max-w-3xl mx-auto px-6 py-12">
-              <div class="glass-card rounded-3xl p-10 text-center space-y-6">
-                <div class="text-6xl">🏆</div>
-                <div class="text-5xl font-extrabold text-slate-900">${pct}%</div>
-                <p class="text-lg text-slate-700">Nível inicial: <strong>${state.nivel}</strong></p>
-                <div class="flex flex-wrap justify-center gap-3">
-                  <button data-action="ver-modulos" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">Explorar módulos</button>
-                  <button data-action="abrir-preparacao" class="px-5 py-2.5 rounded-xl border border-slate-200 font-semibold hover:bg-slate-100 transition">Começar pela Preparação</button>
-                </div>
-              </div>
-            </main>
-          </div>
-        `;
-      }
 
-      function renderGrade() {
-        const cards = MODULOS.map((modulo, idx) => {
-          const progresso = state.progresso[modulo.id];
-          const bloqueado =
-            idx > 0 && !state.progresso[MODULOS[idx - 1].id]?.feito;
-          const estrelas = progresso ? progresso.estrelas : 0;
-          const percent = Math.min(100, estrelas * 20);
-          return `
-            <div class="glass-card rounded-3xl p-6 space-y-4 ${
-              bloqueado ? "opacity-60" : ""
-            }">
-              <div class="flex items-center gap-3">
-                <div class="p-2 rounded-2xl bg-gradient-to-br ${
-                  modulo.cor
-                } text-white text-xl">${LESSONS[modulo.id].emoji}</div>
-                <div class="flex-1">
-                  <h3 class="text-lg font-bold text-slate-900">${modulo.nome}</h3>
-                  <p class="text-xs text-slate-500">${LESSONS[modulo.id].titulo}</p>
-                </div>
-                <span class="text-xl">${progresso?.feito ? "✅" : "🔒"}</span>
-              </div>
-              <div class="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                <div class="h-full bg-indigo-500" style="width: ${percent}%;"></div>
-              </div>
-              <div class="flex items-center justify-between text-sm">
-                <div class="flex items-center gap-2">
-                  <span>⭐</span>
-                  <span>${estrelas} / 5</span>
-                </div>
-                <button data-action="abrir-modulo" data-modulo="${modulo.id}" ${
-                  bloqueado ? "disabled" : ""
-                } class="px-3 py-1.5 rounded-xl text-white font-semibold ${
-            bloqueado
-              ? "bg-slate-300 cursor-not-allowed"
-              : "bg-indigo-600 hover:bg-indigo-700"
-          }">${progresso?.feito ? "Revisar" : "Começar"}</button>
-              </div>
-            </div>
-          `;
-        }).join("");
+        // Componente de lição (passo a passo)
+        const Licao = () => {
+          const dados = LESSONS[moduloAtivo];
+          const passoAtual = dados.passos[passo];
+          const podeVoltar = passo > 0;
+          const podeAvancar = passo < dados.passos.length - 1;
 
-        const revisoes = state.revisao.length
-          ? state.revisao
-              .map(
-                (id) => `
-                  <button data-action="abrir-modulo" data-modulo="${id}" class="text-left p-4 rounded-2xl border border-slate-200 hover:bg-slate-100 transition">
-                    <div class="font-semibold text-slate-900">${LESSONS[id].titulo}</div>
-                    <div class="text-xs text-slate-500">Clique para reforçar os pontos fracos</div>
-                  </button>
-                `
-              )
-              .join("")
-          : `<p class="text-slate-600">Você não possui revisões pendentes. Bom trabalho!</p>`;
-
-        const checkpoints = CHECKPOINTS.map(
-          (ck) => `
-            <div class="p-4 rounded-2xl border border-slate-200">
-              <div class="text-xs font-semibold text-indigo-500 uppercase tracking-wide">${ck.tempo}</div>
-              <ul class="list-disc ml-5 text-sm text-slate-700 mt-2 space-y-1">
-                ${ck.metas.map((meta) => `<li>${meta}</li>`).join("")}
-              </ul>
-            </div>
-          `
-        ).join("");
-
-        return `
-          <div class="min-h-screen bg-slate-50">
-            ${renderHeader()}
-            <main class="max-w-6xl mx-auto px-6 py-12 space-y-8">
-              <section class="grid gap-6 md:grid-cols-3">
-                ${cards}
-              </section>
-              <div class="grid gap-6 lg:grid-cols-[2fr_1fr]">
-                <div class="space-y-6">
-                  ${renderPainelReino()}
-                  ${renderDecisionConsole()}
-                  <section class="glass-card rounded-3xl p-6">
-                    <div class="flex items-center gap-3 mb-4">
-                      <span class="emoji-icon">🛡️</span>
-                      <div>
-                        <h3 class="text-lg font-bold text-slate-900">Revisão adaptativa</h3>
-                        <p class="text-sm text-slate-600">Módulos abaixo de 80% retornam aqui para reforço.</p>
-                      </div>
-                    </div>
-                    <div class="grid gap-3 md:grid-cols-2">${revisoes}</div>
-                  </section>
-                </div>
-                <div class="space-y-6">
-                  ${renderEventFeed()}
-                  <section class="glass-card rounded-3xl p-6">
-                    <div class="flex items-center gap-3 mb-4">
-                      <span class="emoji-icon">🗂️</span>
-                      <div>
-                        <h3 class="text-lg font-bold text-slate-900">Checkpoints de mestre</h3>
-                        <p class="text-sm text-slate-600">Metas para acompanhar a expansão dinástica.</p>
-                      </div>
-                    </div>
-                    <div class="grid gap-4 md:grid-cols-1">${checkpoints}</div>
-                  </section>
-                </div>
-              </div>
-            </main>
-          </div>
-        `;
-      }
-
-      function renderLicao() {
-        const modulo = state.moduloAtivo ? LESSONS[state.moduloAtivo] : null;
-        if (!modulo) return "";
-        const passoAtual = modulo.passos[state.passo];
-        const podeAvancar = state.passo < modulo.passos.length - 1;
-        const podeVoltar = state.passo > 0;
-        const checklist = modulo.checklist
-          .map((item) => `<span class="inline-flex items-center gap-2 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1 text-xs font-semibold">${item}</span>`)
-          .join(" ");
-        return `
-          <div class="min-h-screen bg-slate-50">
-            ${renderHeader()}
-            <main class="max-w-5xl mx-auto px-6 py-10 space-y-6">
-              <div class="flex items-center gap-3">
-                <button data-action="ver-modulos" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-white transition">⬅️</button>
-                <div class="p-2 rounded-2xl bg-gradient-to-br ${
-                  MODULOS.find((m) => m.id === state.moduloAtivo).cor
-                } text-white text-xl">${modulo.emoji}</div>
-                <h2 class="text-2xl font-bold text-slate-900 flex-1">${modulo.titulo}</h2>
-                <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold">Dificuldade: ${state.dificuldade}</span>
-              </div>
-              <div class="glass-card rounded-3xl p-6 space-y-5">
+          return (
+            <Card>
+              <SectionTitle icon={BookOpen} title={`Lição: ${dados.titulo}`} subtitle="Explique, demonstre e execute no jogo" />
+              <div className="space-y-5">
                 <div>
-                  <div class="text-sm font-semibold text-indigo-500 uppercase tracking-wide mb-1">Passo ${state.passo + 1} de ${
-          modulo.passos.length
-        }</div>
-                  <h3 class="text-xl font-bold text-slate-900">${passoAtual.titulo}</h3>
-                  <ul class="list-disc ml-6 mt-3 space-y-2 text-slate-700">
-                    ${passoAtual.acao.map((item) => `<li>${item}</li>`).join("")}
+                  <h4 className="font-semibold text-lg text-slate-900">{passoAtual.titulo}</h4>
+                  <ul className="list-disc ml-6 text-slate-700 mt-3 space-y-1">
+                    {passoAtual.acao.map((acao, index) => (
+                      <li key={index} className="leading-relaxed">{acao}</li>
+                    ))}
                   </ul>
+                  {passoAtual.dica && (
+                    <div className="mt-4 text-sm bg-indigo-50 border border-indigo-200 text-indigo-800 px-4 py-3 rounded-xl flex gap-2">
+                      <Sparkles className="w-4 h-4 mt-0.5" />
+                      <span>{passoAtual.dica}</span>
+                    </div>
+                  )}
                 </div>
-                ${
-                  passoAtual.dica
-                    ? `<div class="bg-indigo-50 border border-indigo-200 text-indigo-800 px-4 py-3 rounded-2xl text-sm">💡 ${passoAtual.dica}</div>`
-                    : ""
-                }
-                <div class="flex flex-wrap gap-3 justify-between">
-                  <button data-action="passo-anterior" class="px-4 py-2 rounded-xl border border-slate-200 ${
-                    podeVoltar ? "hover:bg-slate-100" : "opacity-50 cursor-not-allowed"
-                  }" ${podeVoltar ? "" : "disabled"}>⬅️ Anterior</button>
-                  ${podeAvancar
-                    ? `<button data-action="passo-proximo" class="px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">Próximo ➡️</button>`
-                    : `<button data-action="ir-pratica" class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition">Pronto! Vamos praticar ⚔️</button>`}
+                {/* Controles de navegação da lição */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+                  <button
+                    onClick={() => setPasso((p) => Math.max(0, p - 1))}
+                    disabled={!podeVoltar}
+                    className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-200 font-medium text-sm transition ${
+                      podeVoltar ? "hover:bg-slate-50 hover:border-slate-300" : "opacity-50 cursor-not-allowed"
+                    }`}
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Anterior
+                  </button>
+                  {podeAvancar ? (
+                    <button
+                      onClick={() => setPasso((p) => p + 1)}
+                      className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold text-sm shadow-lg shadow-indigo-300/40 hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
+                    >
+                      Próximo
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setTela("pratica")}
+                      className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-sm shadow-lg shadow-emerald-300/40 hover:bg-emerald-700 focus:ring-2 focus:ring-offset-2 focus:ring-emerald-400"
+                    >
+                      Pronto! Vamos Praticar
+                      <Sword className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
-              <div class="glass-card rounded-3xl p-6">
-                <div class="flex items-center gap-3 mb-3">
-                  <span class="emoji-icon">✅</span>
-                  <h3 class="text-lg font-semibold text-slate-900">Checklist do módulo</h3>
+              {/* Checklist para o jogador realizar no jogo */}
+              <div className="mt-6">
+                <SectionTitle icon={CheckCircle2} title="Checklist do Módulo" />
+                <div className="flex flex-wrap gap-2">
+                  {LESSONS[moduloAtivo].checklist.map((item, index) => (
+                    <Tag key={index}>{item}</Tag>
+                  ))}
                 </div>
-                <div class="flex flex-wrap gap-2">${checklist}</div>
               </div>
-              ${renderSimulacoes()}
-            </main>
-          </div>
-        `;
-      }
+            </Card>
+          );
+        };
 
-      function renderSimulacoes() {
-        const simulacoes = Object.values(ERROR_SIMULATIONS)
-          .map(
-            (sim) => `
-              <div class="p-4 rounded-2xl border border-slate-200">
-                <div class="font-semibold text-slate-900 mb-2">${sim.titulo}</div>
-                <ol class="list-decimal ml-5 text-sm text-slate-700 space-y-1">
-                  ${sim.passos.map((p) => `<li>${p}</li>`).join("")}
-                </ol>
+        // Componente de prática (Quiz)
+        const Pratica = () => {
+          const banco = QUIZ[moduloAtivo] || [];
+          const cur = banco[quiz.i];
+          
+          // Tela de conclusão do quiz
+          if (!cur) {
+            return (
+              <Card>
+                <SectionTitle icon={Trophy} title="Módulo concluído (prática)" subtitle="Hora de consolidar" />
+                <div className="space-y-3">
+                  <p className="text-slate-700">Você concluiu as questões deste módulo.</p>
+                  <button
+                    onClick={() => concluirModulo(quiz.i === 0 ? 0 : quiz.acertos / quiz.i)}
+                    className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
+                  >
+                    Finalizar módulo
+                  </button>
+                </div>
+              </Card>
+            );
+          }
+
+          // Exibição da questão
+          return (
+            <Card>
+              <SectionTitle icon={Target} title="Prática guiada" subtitle={`Dificuldade: ${dificuldade}`} />
+              <div className="space-y-4">
+                <div className="text-slate-900 text-lg font-semibold">{cur.q}</div>
+                <div className="grid md:grid-cols-2 gap-3">
+                  {cur.a.map((alt, index) => (
+                    <button
+                      key={index}
+                      onClick={() => enviarRespostaQuiz(index)}
+                      disabled={quiz.resp !== null}
+                      className={`text-left px-4 py-3 rounded-xl border border-slate-200 transition text-sm font-medium ${
+                        quiz.resp === null ? "hover:bg-slate-50" : "opacity-70"
+                      }`}
+                    >
+                      {alt}
+                    </button>
+                  ))}
+                </div>
+                {/* Feedback após a resposta */}
+                {quiz.feedback && (
+                  <div
+                    className={`p-3 rounded-xl border ${
+                      quiz.feedback.tipo === "ok"
+                        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                        : "bg-amber-50 border-amber-200 text-amber-800"
+                    }`}
+                  >
+                    <div className="font-semibold mb-1">{quiz.feedback.titulo}</div>
+                    <div className="text-sm">{quiz.feedback.texto}</div>
+                    <button
+                      onClick={proximaQuestao}
+                      className="mt-3 px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                    >
+                      Próximo
+                    </button>
+                  </div>
+                )}
               </div>
-            `
-          )
-          .join("");
-        return `
-          <div class="glass-card rounded-3xl p-6">
-            <div class="flex items-center gap-3 mb-4">
-              <span class="emoji-icon">⚠️</span>
-              <div>
-                <h3 class="text-lg font-semibold text-slate-900">Simulações de erro</h3>
-                <p class="text-sm text-slate-600">Pratique o erro de forma segura e corrija em seguida.</p>
+              <div className="mt-6 text-sm text-slate-600 flex items-center gap-4">
+                <Pill>Questão {quiz.i + 1} / {banco.length}</Pill>
+                <Pill>Acertos: {quiz.acertos}</Pill>
+              </div>
+            </Card>
+          );
+        };
+
+        // Componente de revisão adaptativa
+        const RevisaoAdaptativa = () => (
+          <Card>
+            <SectionTitle
+              icon={ShieldQuestion}
+              title="Revisão Adaptativa"
+              subtitle="Se você não atingiu 80% em um módulo, ele aparece aqui para reforço dirigido."
+            />
+            {revisaoPendente.length === 0 ? (
+              <p className="text-slate-700">Você não possui revisões pendentes. Bom trabalho!</p>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-3 mt-3">
+                {revisaoPendente.map((id) => (
+                  <button
+                    key={id}
+                    onClick={() => abrirModulo(id)}
+                    className="text-left p-4 rounded-xl border hover:bg-slate-50 transition"
+                  >
+                    <div className="font-semibold">{LESSONS[id].titulo}</div>
+                    <div className="text-xs text-slate-500">Clique para reforçar os pontos fracos</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </Card>
+        );
+
+        // Renderização principal baseada no estado 'tela'
+        if (tela === "boasvindas")
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white">
+              <Header />
+              <div className="max-w-4xl mx-auto p-6 text-center space-y-6">
+                <div className="mb-6 animate-bounce">
+                  <Sparkles className="w-16 h-16 mx-auto" />
+                </div>
+                <div className="space-y-3">
+                  <h1 className="text-4xl font-extrabold">Bem-vindo à Academia de Reis</h1>
+                  <p className="text-lg text-white/90">
+                    Do primeiro clique ao domínio total de Crusader Kings 3. Método avançado, prático e 100% em português.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    onClick={iniciarDiagnostico}
+                    className="px-6 py-3 rounded-2xl bg-yellow-400 text-indigo-900 font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/50"
+                  >
+                    Iniciar Diagnóstico
+                  </button>
+                  <button
+                    onClick={() => setTela("grade")}
+                    className="px-6 py-3 rounded-2xl bg-white/10 border border-white/30 hover:bg-white/20 transition"
+                  >
+                    Ver Módulos
+                  </button>
+                </div>
+                <Card className="bg-white/10 backdrop-blur border-white/20 text-white text-left">
+                  <SectionTitle icon={HelpCircle} title="Como funciona" />
+                  <ul className="list-disc ml-6 text-sm space-y-1 text-white/90">
+                    <li>Explique + mostre + peça ação (clique a clique).</li>
+                    <li>Filtros e botões com os nomes oficiais do jogo em PT-BR.</li>
+                    <li>Active recall ao final de cada módulo.</li>
+                    <li>Simulações de erros comuns com correções guiadas.</li>
+                    <li>Gating: novos módulos liberam após dominar os anteriores.</li>
+                  </ul>
+                </Card>
               </div>
             </div>
-            <div class="grid gap-3 md:grid-cols-3">${simulacoes}</div>
-          </div>
-        `;
-      }
+          );
 
-      function renderPratica() {
-        const banco = QUIZ[state.moduloAtivo] || [];
-        const pergunta = banco[state.quiz.i];
-        if (!pergunta) {
-          return `
-            <div class="min-h-screen bg-slate-50">
-              ${renderHeader()}
-              <main class="max-w-3xl mx-auto px-6 py-12">
-                <div class="glass-card rounded-3xl p-8 text-center space-y-4">
-                  <div class="text-5xl">🏆</div>
-                  <p class="text-lg">Você concluiu as questões deste módulo.</p>
-                  <button data-action="finalizar-modulo" class="px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">Finalizar módulo</button>
-                </div>
-              </main>
+        if (tela === "diagnostico") {
+          const cur = QUIZ.diagnostico[diagnostico.i];
+          return (
+            <div className="min-h-screen bg-slate-50">
+              <Header />
+              <div className="max-w-3xl mx-auto p-6">
+                <Card>
+                  <SectionTitle
+                    icon={Target}
+                    title="Teste de Diagnóstico"
+                    subtitle={`Questão ${diagnostico.i + 1} de ${QUIZ.diagnostico.length}`}
+                  />
+                  <div className="text-lg font-semibold text-slate-900">{cur.q}</div>
+                  <div className="grid md:grid-cols-2 gap-3 mt-4">
+                    {cur.a.map((alt, i) => (
+                      <button
+                        key={i}
+                        onClick={() => responderDiagnostico(i)}
+                        className="text-left px-4 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition"
+                      >
+                        {alt}
+                      </button>
+                    ))}
+                  </div>
+                </Card>
+              </div>
             </div>
-          `;
+          );
         }
-        const total = banco.length;
-        return `
-          <div class="min-h-screen bg-slate-50">
-            ${renderHeader()}
-            <main class="max-w-4xl mx-auto px-6 py-10 space-y-6">
-              <div class="flex items-center gap-3">
-                <button data-action="voltar-licao" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-white transition">⬅️</button>
-                <div class="p-2 rounded-2xl bg-indigo-500 text-white text-xl">🎯</div>
-                <h2 class="text-2xl font-bold text-slate-900 flex-1">Prática guiada</h2>
-                <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold">Dificuldade: ${state.dificuldade}</span>
-              </div>
-              <div class="glass-card rounded-3xl p-6 space-y-6">
-                <h3 class="text-lg font-semibold text-slate-900">${pergunta.q}</h3>
-                <div class="grid gap-3 md:grid-cols-2">
-                  ${pergunta.a
-                    .map((alt, idx) => {
-                      const selecionada = state.quiz.selecionada === idx;
-                      const estado = state.quiz.respondeu
-                        ? idx === pergunta.c
-                          ? "border-emerald-400 bg-emerald-50"
-                          : selecionada
-                          ? "border-rose-300 bg-rose-50"
-                          : "opacity-70"
-                        : "hover:bg-slate-100";
-                      return `<button data-action="responder-quiz" data-index="${idx}" class="text-left px-4 py-3 rounded-2xl border border-slate-200 transition ${estado}" ${
-                        state.quiz.respondeu ? "disabled" : ""
-                      }>${alt}</button>`;
-                    })
-                    .join("")}
-                </div>
-                ${state.quiz.feedback
-                  ? `<div class="rounded-2xl px-4 py-3 text-sm ${
-                      state.quiz.feedback.correto
-                        ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
-                        : "bg-amber-50 border border-amber-200 text-amber-800"
-                    }">
-                      <div class="font-semibold mb-1">${
-                        state.quiz.feedback.correto ? "Perfeito!" : "Quase lá!"
-                      }</div>
-                      <p>${state.quiz.feedback.texto}</p>
-                      <button data-action="proxima-questao" class="mt-3 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">Próximo</button>
-                    </div>`
-                  : ""}
-              </div>
-              <div class="glass-card rounded-3xl p-4 flex flex-wrap gap-3 text-sm text-slate-600">
-                <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">Questão ${
-                  state.quiz.i + 1
-                } / ${total}</span>
-                <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">Acertos: ${
-                  state.quiz.acertos
-                }</span>
-              </div>
-              ${renderSimulacoes()}
-            </main>
-          </div>
-        `;
-      }
 
-      function renderModuloConcluido() {
-        const progresso = state.progresso[state.moduloAtivo] || { estrelas: 0 };
-        const estrelas = progresso.estrelas;
-        const estrelasHtml = Array.from({ length: 5 })
-          .map(
-            (_, idx) =>
-              `<span class="text-3xl ${idx < estrelas ? "text-yellow-400" : "text-slate-300"}">⭐</span>`
-          )
-          .join("");
-        return `
-          <div class="min-h-screen bg-slate-50">
-            ${renderHeader()}
-            <main class="max-w-3xl mx-auto px-6 py-12">
-              <div class="glass-card rounded-3xl p-10 text-center space-y-6">
-                <div class="text-6xl">🏆</div>
-                <h3 class="text-2xl font-bold text-slate-900">Módulo concluído!</h3>
-                <div class="flex items-center justify-center gap-2">${estrelasHtml}</div>
-                <div class="flex flex-wrap justify-center gap-3">
-                  <button data-action="ver-modulos" class="px-5 py-2.5 rounded-xl border border-slate-200 font-semibold hover:bg-slate-100 transition">Voltar aos módulos</button>
-                  <button data-action="refazer-modulo" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">Refazer para 5★</button>
-                </div>
+        if (tela === "resultado-diagnostico") {
+          const pct = (diagnostico.acertos / QUIZ.diagnostico.length) * 100;
+          return (
+            <div className="min-h-screen bg-slate-50">
+              <Header />
+              <div className="max-w-3xl mx-auto p-6">
+                <Card className="text-center">
+                  <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-2" />
+                  <div className="text-5xl font-extrabold text-slate-900">{pct.toFixed(0)}%</div>
+                  <div className="mt-2 text-slate-700">
+                    Nível inicial: <b>{nivel}</b>
+                  </div>
+                  <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+                    <button
+                      onClick={() => setTela("grade")}
+                      className="px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                    >
+                      Explorar Módulos
+                    </button>
+                    <button
+                      onClick={() => abrirModulo("preparacao")}
+                      className="px-5 py-2 rounded-lg border border-slate-200 hover:bg-slate-50"
+                    >
+                      Começar pela Preparação
+                    </button>
+                  </div>
+                </Card>
               </div>
-            </main>
-          </div>
-        `;
-      }
-
-      function render() {
-        let html = "";
-        switch (state.tela) {
-          case "boasvindas":
-            html = renderBoasVindas();
-            break;
-          case "diagnostico":
-            html = renderDiagnostic();
-            break;
-          case "resultado-diagnostico":
-            html = renderResultadoDiagnostico();
-            break;
-          case "grade":
-            html = renderGrade();
-            break;
-          case "licao":
-            html = renderLicao();
-            break;
-          case "pratica":
-            html = renderPratica();
-            break;
-          case "modulo-concluido":
-            html = renderModuloConcluido();
-            break;
-          default:
-            html = renderBoasVindas();
+            </div>
+          );
         }
-        app.innerHTML = html;
-        bindEvents();
+
+        if (tela === "grade")
+          return (
+            <div className="min-h-screen bg-slate-50">
+              <Header />
+              <div className="max-w-6xl mx-auto p-6 space-y-6">
+                <PainelModulos />
+                <RevisaoAdaptativa />
+                <Card>
+                  <SectionTitle icon={Layers} title="Checkpoints de Mestre" />
+                  <div className="grid md:grid-cols-3 gap-3">
+                    {CHECKPOINTS.map((ck, i) => (
+                      <div key={i} className="p-3 rounded-xl border border-slate-200 bg-white/60">
+                        <div className="text-sm text-slate-500">{ck.tempo}</div>
+                        <ul className="list-disc ml-5 text-sm text-slate-800 mt-1 space-y-1">
+                          {ck.metas.map((m, j) => (
+                            <li key={j}>{m}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            </div>
+          );
+
+        if (tela === "licao" || tela === "pratica") {
+          const modulo = MODULOS.find((m) => m.id === moduloAtivo);
+          if (!modulo) return null;
+          return (
+            <div className="min-h-screen bg-slate-50">
+              <Header />
+              <div className="max-w-5xl mx-auto p-6 space-y-6">
+                {/* Navegação e título do módulo */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => setTela("grade")}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-white transition"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <div className={`p-2 rounded-xl text-white bg-gradient-to-br ${modulo.cor}`}>
+                    {(() => {
+                      const IconeModulo = modulo.icone;
+                      return IconeModulo ? <IconeModulo className="w-5 h-5" /> : null;
+                    })()}
+                  </div>
+                  <div className="text-xl font-bold text-slate-900">{modulo.nome}</div>
+                  <Pill>Dificuldade: {dificuldade}</Pill>
+                </div>
+                {tela === "licao" ? <Licao /> : <Pratica />}
+                {/* Simulações de Erro (reutilizável) */}
+                <Card>
+                  <SectionTitle
+                    icon={AlertTriangle}
+                    title="Simulações de Erro"
+                    subtitle="Pratique o erro de forma segura e corrija-o em seguida"
+                  />
+                  <div className="grid md:grid-cols-3 gap-3">
+                    {Object.values(ERROR_SIMULATIONS).map((e, i) => (
+                      <div key={i} className="p-4 rounded-xl border border-slate-200 bg-white/70">
+                        <div className="font-semibold text-slate-900">{e.titulo}</div>
+                        <ol className="list-decimal ml-5 text-sm text-slate-700 mt-2 space-y-1">
+                          {e.passos.map((p, j) => (
+                            <li key={j}>{p}</li>
+                          ))}
+                        </ol>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            </div>
+          );
+        }
+
+        if (tela === "modulo-concluido") {
+          const estrelas = progresso[moduloAtivo]?.estrelas || 0;
+          return (
+            <div className="min-h-screen bg-slate-50">
+              <Header />
+              <div className="max-w-3xl mx-auto p-6">
+                <Card className="text-center">
+                  <Trophy className="w-16 h-16 text-yellow-500 mx-auto" />
+                  <h3 className="text-2xl font-bold mt-2 text-slate-900">Módulo concluído!</h3>
+                  <div className="flex items-center justify-center gap-1 my-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-6 h-6 ${
+                          i < estrelas ? "text-yellow-400 fill-yellow-400" : "text-slate-300"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                    <button
+                      onClick={() => setTela("grade")}
+                      className="px-5 py-2 rounded-lg border border-slate-200 hover:bg-slate-50"
+                    >
+                      Voltar aos módulos
+                    </button>
+                    <button
+                      onClick={() => abrirModulo(moduloAtivo)}
+                      className="px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                    >
+                      Refazer para 5★
+                    </button>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          );
+        }
+
+        return null;
       }
 
-      function bindEvents() {
-        document.querySelectorAll("[data-action]").forEach((el) => {
-          el.addEventListener("click", (event) => {
-            const action = event.currentTarget.dataset.action;
-            const index = parseInt(event.currentTarget.dataset.index, 10);
-            const modulo = event.currentTarget.dataset.modulo;
-            const painel = event.currentTarget.dataset.painel;
-            const decisao = event.currentTarget.dataset.decisao;
-            switch (action) {
-              case "iniciar-diagnostico":
-                iniciarDiagnostico();
-                break;
-              case "ver-modulos":
-                voltarGrade();
-                break;
-              case "responder-diagnostico":
-                responderDiagnostico(index);
-                break;
-              case "abrir-preparacao":
-                abrirModulo("preparacao");
-                break;
-              case "abrir-modulo":
-                if (!event.currentTarget.disabled) abrirModulo(modulo);
-                break;
-              case "passo-proximo":
-                avancarPasso();
-                break;
-              case "passo-anterior":
-                voltarPasso();
-                break;
-              case "ir-pratica":
-                irParaPratica();
-                break;
-              case "responder-quiz":
-                responderQuiz(index);
-                break;
-              case "proxima-questao":
-                proximaQuestao();
-                break;
-              case "finalizar-modulo":
-                concluirModulo();
-                break;
-              case "voltar-licao":
-                voltarLicoes();
-                break;
-              case "refazer-modulo":
-                abrirModulo(state.moduloAtivo);
-                break;
-              case "mudar-painel":
-                if (painel) mudarPainelReino(painel);
-                break;
-              case "executar-decisao":
-                if (decisao) executarDecisao(decisao);
-                break;
-              case "limpar-eventos":
-                limparEventos();
-                break;
-              default:
-                break;
-            }
-          });
-        });
-      }
 
-      render();
+      // Inicialização da aplicação React
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<AcademiaCK3 />);
     </script>
   </body>
 </html>

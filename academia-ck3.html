@@ -1165,7 +1165,10 @@
                     <ArrowLeft className=\"w-4 h-4\" />
                   </button>
                   <div className={`p-2 rounded-xl text-white bg-gradient-to-br ${modulo.cor}`}>
-                    <modulo.icone className=\"w-5 h-5\" />
+                    {(() => {
+                      const IconeModulo = modulo.icone;
+                      return IconeModulo ? <IconeModulo className=\"w-5 h-5\" /> : null;
+                    })()}
                   </div>
                   <div className=\"text-xl font-bold text-slate-900\">{modulo.nome}</div>
                   <Pill>Dificuldade: {dificuldade}</Pill>

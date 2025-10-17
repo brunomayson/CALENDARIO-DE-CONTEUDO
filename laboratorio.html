@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Laboratório dos Números</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <style>
+    .pop { animation: pop .4s ease; }
+    @keyframes pop { 0% { transform: scale(.95); opacity: .1; } 100% { transform: scale(1); opacity: 1; } }
+    .pulse { animation: pulse 2s infinite ease-in-out; }
+    @keyframes pulse { 0%, 100% { opacity: .9; } 50% { opacity: .6; } }
+    .float { animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    .confetti { position: fixed; top: -10px; width: 6px; height: 12px; opacity: .9; animation: fall 2.2s linear forwards; z-index: 100; }
+    @keyframes fall { to { transform: translateY(110vh) rotate(360deg); opacity: 1; } }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 min-h-screen">
+  <div id="app"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo, useCallback, useContext } = React;
+
+    const DEFAULT_GEMINI_KEY = "AIzaSyBjf7ZXrmMepFKAR4PZDPsTDwykXIAhFGE";
+
+    const AGE_PROFILES = {
+      '6-8': {
+        tone: 'lúdico, cheio de imaginação e com comparações simples do cotidiano infantil',
+        encouragementCue: 'Use elogios calorosos, convide o aluno a contar como pensou e celebre com emojis alegres.',
+        chatGuidance: 'Faça perguntas curtas, ofereça metáforas com brinquedos e proponha desafios brincando de faz de conta.',
+        curiosityLabel: 'Curiosidades Coloridas do Universo Bruno',
+        missionLabel: 'Missões brincadeiras para experimentar depois',
+        missionIntro: 'Escolha uma missão divertida para colocar em prática quando terminar a aula:',
+        speech: { rate: 1.05, pitch: 1.18 },
+        preferredModel: 'gemini-1.5-flash-latest',
+        storyHook: 'Traga personagens amigáveis, comidas saborosas e brincadeiras cooperativas.',
+        mentorCue: 'Mostre orgulho do esforço, lembre que errar é parte da descoberta e sugira uma brincadeira para revisar.',
+      },
+      '9-12': {
+        tone: 'encorajador, curioso e com desafios investigativos que despertam autonomia',
+        encouragementCue: 'Reforce o raciocínio usado, destaque estratégias e convide o aluno a explicar o próximo passo.',
+        chatGuidance: 'Estimule perguntas “e se...?”, proponha mini missões investigativas e conecte com situações reais do dia a dia.',
+        curiosityLabel: 'Insights rápidos para mentes investigadoras',
+        missionLabel: 'Desafios para explorar depois da aula',
+        missionIntro: 'Quando terminar, escolha um destes desafios rápidos para testar seu conhecimento:',
+        speech: { rate: 1, pitch: 1.08 },
+        preferredModel: 'gemini-1.5-flash-latest',
+        storyHook: 'Conecte a situações de escola, esportes e tecnologia que exijam estratégia.',
+        mentorCue: 'Valorize a independência, convide o aluno a ensinar alguém e sugira aplicar o conceito em casa.',
+      },
+      '13+': {
+        tone: 'maduro, parceiro de estudo e focado em aplicações reais e metas pessoais',
+        encouragementCue: 'Reconheça a análise crítica, proponha aprofundamentos e destaque conexões com o mundo real.',
+        chatGuidance: 'Trabalhe com perguntas abertas, incentive reflexões sobre carreira e convide para autoavaliações objetivas.',
+        curiosityLabel: 'Contextos avançados para conectar teoria e prática',
+        missionLabel: 'Missões estratégicas para consolidar o aprendizado',
+        missionIntro: 'Selecione uma missão para transformar o conteúdo em ação concreta:',
+        speech: { rate: 0.94, pitch: 1 },
+        preferredModel: 'gemini-1.5-flash-latest',
+        storyHook: 'Construa cenários ligados a projetos, finanças pessoais e desafios acadêmicos.',
+        mentorCue: 'Estimule metas de longo prazo, cite aplicações profissionais e indique próximos passos de aprofundamento.',
+      },
+      default: {
+        tone: 'acolhedor, claro e empolgante',
+        encouragementCue: 'Elogie o esforço e convide o aluno a experimentar novas estratégias.',
+        chatGuidance: 'Mantenha a conversa calorosa e adaptável ao ritmo do aluno.',
+        curiosityLabel: 'Curiosidades do Laboratório',
+        missionLabel: 'Missões para continuar praticando',
+        missionIntro: 'Separei algumas missões extras para você experimentar quando quiser:',
+        speech: { rate: 1, pitch: 1.05 },
+        preferredModel: 'gemini-1.5-flash-latest',
+        storyHook: 'Use exemplos cotidianos e metáforas amigáveis.',
+        mentorCue: 'Celebre progresso e indique um próximo passo prático.',
+      },
+    };
+
+    const BrunoProfileContext = React.createContext(AGE_PROFILES.default);
+
+    const voiceRegistry = { voice: null };
+
+    const pickBrunoVoice = (voices = []) => {
+      if (!voices.length) return null;
+      const priority = voices.find(v => /br(?:-|\s)?pt|portuguese \(brazil\)/i.test(`${v.name} ${v.lang}`));
+      return priority || voices.find(v => v.lang?.toLowerCase().startsWith('pt')) || voices[0];
+    };
+
+    const useBrunoVoice = () => {
+      const [voice, setVoice] = useState(() => {
+        if (typeof window === 'undefined' || !window.speechSynthesis) return null;
+        const available = window.speechSynthesis.getVoices();
+        const chosen = voiceRegistry.voice || pickBrunoVoice(available);
+        if (chosen) voiceRegistry.voice = chosen;
+        return chosen || null;
+      });
+
+      useEffect(() => {
+        if (typeof window === 'undefined' || !window.speechSynthesis) return;
+        const handleVoices = () => {
+          const available = window.speechSynthesis.getVoices();
+          if (!available.length) return;
+          const chosen = pickBrunoVoice(available);
+          if (chosen && chosen !== voiceRegistry.voice) {
+            voiceRegistry.voice = chosen;
+            setVoice(chosen);
+          }
+        };
+        handleVoices();
+        window.speechSynthesis.addEventListener('voiceschanged', handleVoices);
+        return () => window.speechSynthesis.removeEventListener('voiceschanged', handleVoices);
+      }, []);
+
+      return voice;
+    };
+
+    const audioBank = {
+      ok: "data:audio/wav;base64,UklGRlgEAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABgAZGF0YQQEAACAgP/9/v38/PX36fLp9Ofz6fXr9vH59Pr6/QD+/f/9AAUAGgA9AFIAcwCPAKcAtgDJAOEA7AECAU4BpAGyAOsBFgGBAcwB9QIZApYDxwH/AiMClQPSAfsCLgKyA+kCAwMIAesB5wHYAREAxgHjAYIBjwCxAP0A7wDeAPQA7gD8AP8A/gD9APMA6gDBALEAowCLAJYAkgCRAJEAlQCiAKgArACxALUAvgDFAMsA2wDpAP8BAwINAhwCLgA9ADUAJgAgAB0AHAAcABwAHgAgACIAJgAoACoALAAvADIANQA4ADsAPgBCAEUASAA=",
+      err: "data:audio/wav;base64,UklGRlAEAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABgAZGF0YQQEAACz/v/3/v/9/f7+/P/5/f/7/f/7//8ACQApAEIAYAB3AIYAnACyANYA9QEXAZ4BvwHnASQBmAHCAfMBGgGbAdIB+wIoArYD7AIEA/ID/wHmAeMB1AFnAUABPQDCANAAzADKAMcAxAC/ALsAsQCoAJUAjQB5AFQAOQAdAAAAAPv9+fr37vHfzNDFv7m0r6ekkYh5aVItGA0GAAAAAPz8/f3+/P37/Pv59vDx7+7q6Ofm4uLg3t3c2tjW1NTQz8/MysrJyMjFxMTCwsLBv7+9vb25ubm1tbSwsLCvr66urqysrKioqKOjo6CgoJ+fn56enpaWlZWVlJSUk5OTkJCQj4+PjY2NjIyMiIiIfHx8e3t7eXl5eHh4d3d3dHR0c3NzcHBwcG9vb2xsbGhoaGdnZ2RkZGBgYF9fX15eXlxcXFtbW1paWldXV1RUVFNTU1FRUU9PT0xMTCwsLA==",
+      click: "data:audio/wav;base64,UklGRkIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQgAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAEAAAAAAQAAAAE="
+    };
+
+    const useSound = (key) => {
+      const ref = useRef(null);
+      useEffect(() => {
+        const audio = new Audio(audioBank[key]);
+        audio.preload = "auto";
+        audio.volume = 0.45;
+        ref.current = audio;
+        return () => {
+          audio.pause();
+          audio.src = "";
+        };
+      }, [key]);
+      return useCallback(() => {
+        if (!ref.current) return;
+        try {
+          ref.current.currentTime = 0;
+          const promise = ref.current.play();
+          if (promise?.catch) promise.catch(() => {});
+        } catch (error) {
+          console.warn('Falha ao reproduzir som', error);
+        }
+      }, []);
+    };
+
+    function ReadAloudButton({ text }) {
+      const clickSound = useSound('click');
+      const profile = useContext(BrunoProfileContext);
+      const voice = useBrunoVoice();
+      const canSpeak = typeof window !== "undefined" && "speechSynthesis" in window;
+
+      const speak = useCallback(() => {
+        if (!canSpeak) return;
+        const sanitized = String(text || "").replace(/[\s\n]+/g, " ");
+        const utterance = new SpeechSynthesisUtterance(sanitized);
+        utterance.lang = "pt-BR";
+        if (voice) utterance.voice = voice;
+        if (profile?.speech) {
+          utterance.rate = profile.speech.rate;
+          utterance.pitch = profile.speech.pitch;
+        }
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      }, [canSpeak, text, voice, profile]);
+
+      return (
+        <button
+          onClick={() => { clickSound(); speak(); }}
+          className="inline-flex items-center gap-2 text-sm px-3 py-1 rounded-lg bg-purple-100 text-purple-800 hover:bg-purple-200"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-1.414 1.414A6.47 6.47 0 0 1 12.025 8a6.47 6.47 0 0 1-1.903 4.596z" />
+            <path d="M10.121 12.596A6.47 6.47 0 0 1 8.025 8a6.47 6.47 0 0 1 2.096-4.596l-1.414-1.414A8.47 8.47 0 0 0 5.025 8a8.47 8.47 0 0 0 3.682 6.01zM8.707 11.182A4.5 4.5 0 0 1 6.525 8a4.5 4.5 0 0 1 2.182-3.182L7.107 3.404A6.5 6.5 0 0 0 3.525 8a6.5 6.5 0 0 0 3.582 4.596zM6 7.828a2.5 2.5 0 0 1 0-.656v.656zm-1.5-1.318a.5.5 0 0 1 .707 0L6 7.207V2.5a.5.5 0 0 1 1 0v4.707l.646-.647a.5.5 0 0 1 .708.708l-1.5 1.5a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 0-.708z" />
+          </svg>
+          Ouvir
+        </button>
+      );
+    }
+
+    const FRACTION_SKILLS = {
+      unit: { label: "Frações unitárias (1/n)", goal: 3 },
+      parts: { label: "Partes do todo", goal: 3 },
+      compare: { label: "Comparar frações", goal: 3 },
+      equivalent: { label: "Frações equivalentes", goal: 3 },
+      simplify: { label: "Simplificar frações", goal: 3 },
+      likeDen: { label: "Somar/subtrair (mesmo denominador)", goal: 3 },
+    };
+
+    const planets = [
+      { id: "fracoes", name: "Planeta Pizzarium", color: "from-orange-500 to-red-600", emoji: "🍕" },
+      { id: "decimais", name: "Planeta Decimalis", color: "from-purple-500 to-pink-600", emoji: "💎" },
+      { id: "operacoes", name: "Planeta Calcularis", color: "from-blue-500 to-cyan-600", emoji: "🔢" },
+      { id: "logica", name: "Planeta Enigmatis", color: "from-green-500 to-teal-600", emoji: "🧩" },
+      { id: "financas", name: "Planeta Fortuna", color: "from-yellow-400 to-amber-500", emoji: "💰" },
+      { id: "chat", name: "Converse com Bruno", color: "from-gray-400 to-gray-600", emoji: "💬" },
+    ];
+
+    const diagnosticQuestions = [
+      { question: "Quanto é 48 ÷ 6?", options: ["6", "7", "8", "9"], correct: 2, topic: "operacoes" },
+      { question: "Qual fração representa metade?", options: ["1/4", "1/2", "1/3", "2/4"], correct: 1, topic: "fracoes" },
+      { question: "0,5 é igual a:", options: ["5/10", "5/100", "1/5", "5/1"], correct: 0, topic: "decimais" },
+      { question: "Se João tem 12 anos e Maria tem o dobro, quantos anos tem Maria?", options: ["20", "22", "24", "26"], correct: 2, topic: "logica" },
+      { question: "Qual é 30% de 100?", options: ["3", "30", "300", "0,3"], correct: 1, topic: "decimais" },
+      { question: "Você tem R$20 e gasta R$8. Com quanto você fica?", options: ["R$10", "R$12", "R$15", "R$28"], correct: 1, topic: "financas" },
+    ];
+
+    const moduleLessons = {
+      fracoes: {
+        title: "🍕 Entendendo Frações",
+        steps: [
+          { title: "Concreto: o que é uma fração?", content: "Fração é uma parte de um todo dividido em partes IGUAIS. Vamos usar pizza para enxergar de verdade!", visual: "🍕", example: "Divida a pizza em 4 partes iguais. Se você comeu 1 parte, comeu 1/4." },
+          { title: "Representacional: barras e retângulos", content: "Agora representamos com barras. A parte pintada é o numerador; as partes totais, o denominador.", visual: "▮▮▯▯ (2/4)", example: "2/4 significa 2 partes pintadas de um total de 4 partes iguais." },
+          { title: "Abstrato: símbolos e operações", content: "Vamos ler e escrever 1/6, 2/5, 3/8… Depois comparar, simplificar e somar frações.", visual: "1/6, 2/5, 3/8", example: "12/16 simplifica para 3/4 (divida em cima e embaixo por 4)." },
+        ],
+      },
+      decimais: {
+        title: "💎 Explorando os Decimais",
+        steps: [
+          { title: "O que são decimais?", content: "Decimais representam partes menores que 1 usando uma vírgula. Pense neles como pedacinhos de um número inteiro.", visual: "0,5 = 1/2", example: "0,25 é o mesmo que 25 centavos de 1 real, ou 1/4 do real." },
+          { title: "Decimais no dia a dia", content: "Usamos decimais o tempo todo! No dinheiro (R$ 2,50), nas medidas (1,75m de altura) e em receitas (0,5 litro de leite).", visual: "💰 📏 🥛", example: "Se algo custa R$9,99, custa quase R$10, mas não exatamente." },
+          { title: "Somando e Subtraindo Decimais", content: "Para somar ou subtrair, o segredo é alinhar a vírgula! Vírgula embaixo de vírgula, e o resto fica fácil.", visual: "1,25 + 0,50 = 1,75", example: "Para calcular 2,5 + 1,3, arme a conta com as vírgulas alinhadas. O resultado é 3,8." },
+        ],
+      },
+      operacoes: {
+        title: "🔢 Dominando as Operações",
+        steps: [
+          { title: "Adição e Subtração", content: "Juntar e tirar quantidades. São a base para resolver muitos problemas!", visual: "3 + 2 = 5", example: "Se você tem 15 balões e 7 voam, você fica com 15 - 7 = 8 balões." },
+          { title: "Multiplicação: a soma repetida", content: "Multiplicar é um jeito rápido de somar o mesmo número várias vezes.", visual: "3 × 4 = 12", example: "3 caixas com 4 lápis cada é o mesmo que 4 + 4 + 4, que é 3 × 4 = 12 lápis." },
+          { title: "Divisão: a partilha justa", content: "Dividir é repartir em partes iguais. É o oposto de multiplicar.", visual: "12 ÷ 3 = 4", example: "Dividir 12 biscoitos para 3 amigos significa que cada um recebe 4 biscoitos." },
+        ],
+      },
+      logica: {
+        title: "🧩 Desvendando Enigmas Lógicos",
+        steps: [
+          { title: "Resolver passo a passo", content: "Para resolver um problema, primeiro entenda a história, depois encontre os dados e por fim, monte um plano.", visual: "🤔 ➡️ 📝 ➡️ ✅", example: "'Ana tem 5 a mais que Bruno, que tem 10.' Primeiro, descubra a idade de Bruno (10), depois some 5 para achar a de Ana (15)." },
+          { title: "Padrões e sequências", content: "Muitos problemas têm um segredo, uma regra que se repete. Encontre o padrão!", visual: "2, 4, 6, 8, ?", example: "A regra é somar 2. O próximo número é 10." },
+        ],
+      },
+      financas: {
+        title: "💰 Planeta Fortuna: Mestre do Dinheiro",
+        steps: [
+          { title: "Nível 1: O que é Dinheiro?", content: "O dinheiro não aparece magicamente! Ele é resultado de trabalho e esforço, uma ferramenta para trocar por coisas que precisamos ou queremos.", visual: "👨‍🔧➡️🪙", example: "Um médico cuida de pessoas e recebe dinheiro. Um padeiro faz pão e vende para receber dinheiro." },
+          { title: "Nível 2: Necessidade vs. Desejo", content: "Precisamos de comida, água e um teto (necessidades). Queremos brinquedos e doces (desejos). Aprender a diferença é o primeiro passo para ser inteligente com o dinheiro!", visual: "🍎 vs 🎮", example: "Almoçar é uma necessidade. Comprar uma figurinha nova é um desejo." },
+          { title: "Nível 3: O Poder de Poupar", content: "Poupar é guardar uma parte do seu dinheiro para realizar sonhos maiores no futuro, como comprar uma bicicleta ou fazer uma viagem.", visual: "🐷🏦", example: "Se você guarda R$5 toda semana, em 10 semanas terá R$50 para comprar aquele brinquedo que tanto quer!" },
+          { title: "Nível 4: O Dinheiro Trabalhador (Ativos)", content: "Ativos são coisas que colocam mais dinheiro no seu bolso, mesmo quando você não está trabalhando. Eles são como funcionários do seu dinheiro!", visual: "🪙➡️🪙🪙", example: "Se você tem uma máquina de bolinhas e ela te dá R$1 todo dia, ela é um ativo. Um videogame que só gera custos é um passivo." },
+          { title: "Nível 5: A Corrida dos Ratos", content: "É um ciclo onde as pessoas trabalham para ganhar dinheiro, pagam contas e ficam sem nada, precisando trabalhar mais. Nosso objetivo é sair dessa corrida!", visual: "🐹🎡", example: "Ganhar R$100 e gastar R$100 em contas e desejos todo mês é estar na corrida dos ratos. O segredo é fazer sobrar e comprar ativos." },
+        ]
+      }
+    };
+
+    const moduleCuriosities = {
+      fracoes: [
+        { title: 'Frações no espaço', detail: 'Astronautas dividem o oxigênio e a água da nave em frações para cada membro da equipe. Se a missão dura 6 dias e há 12 litros de água, cada pessoa recebe 1/6 do total por dia.' },
+        { title: 'Música fracionada', detail: 'As notas musicais usam frações: uma semínima vale 1/4 de um compasso 4/4. É por isso que batemos palma quatro vezes na mesma batida!' },
+      ],
+      decimais: [
+        { title: 'Precisão nos esportes', detail: 'Juízes olímpicos registram tempos como 9,58 segundos. Os decimais mostram cada centésimo de segundo que decide o vencedor.' },
+        { title: 'Tecnologia e sensores', detail: 'Sensores de temperatura enviam leituras decimais, como 36,7 °C, para que médicos e engenheiros façam ajustes finos em tempo real.' },
+      ],
+      operacoes: [
+        { title: 'Robôs calculistas', detail: 'Robôs industriais executam milhares de adições e multiplicações por segundo para posicionar peças com precisão milimétrica.' },
+        { title: 'Games e física', detail: 'Motores de jogos usam operações para calcular saltos, velocidade e colisões em cada quadro da animação.' },
+      ],
+      logica: [
+        { title: 'Detetives digitais', detail: 'Analistas de dados usam lógica para descobrir padrões escondidos em milhões de informações e prever tendências.' },
+        { title: 'Programação estratégica', detail: 'Algoritmos de busca e recomendação seguem passos lógicos que você também aprende ao resolver enigmas sequenciais.' },
+      ],
+      financas: [
+        { title: 'Juros que não dormem', detail: 'Investimentos rendem mesmo enquanto você está dormindo. Juros compostos multiplicam o dinheiro a cada período.' },
+        { title: 'Planejamento familiar', detail: 'Famílias usam planilhas com percentuais para decidir quanto poupar, gastar e doar a cada mês.' },
+      ],
+    };
+
+    const moduleMissions = {
+      fracoes: [
+        'Observe o lanche do dia e anote que fração dele você comeu. Desenhe no caderno.',
+        'Crie uma pizza de papelão dividida em 8 partes. Pinte sabores diferentes e monte combinações.',
+        'Durante uma conversa com alguém da família, pergunte que fração do tempo livre eles dedicam a cada hobby.',
+      ],
+      decimais: [
+        'Compare os preços de três produtos no mercado e anote os valores com duas casas decimais.',
+        'Meça sua altura e a de alguém da família em metros com decimais. Calcule a diferença.',
+        'Faça uma receita simples e registre as quantidades em litros ou quilogramas usando decimais.',
+      ],
+      operacoes: [
+        'Planeje uma festa imaginária somando a quantidade de convidados e itens necessários.',
+        'Crie um placar de campeonato e calcule a pontuação total das equipes ao final de três rodadas.',
+        'Divida 120 minutos de estudo em blocos equilibrados para cada matéria e registre as contas.',
+      ],
+      logica: [
+        'Monte uma tabela de “se… então…” para um problema cotidiano, como escolher transporte em dias de chuva.',
+        'Crie uma sequência própria (por exemplo, 3, 6, 9, ?) e peça para alguém descobrir a regra.',
+        'Escreva um enigma com pistas lógicas que leve um amigo a descobrir um objeto escondido.',
+      ],
+      financas: [
+        'Organize um orçamento fictício de R$100 dividindo em guardar, investir e gastar conscientemente.',
+        'Pesquise quanto custa um sonho (curso, viagem, objeto) e calcule em quanto tempo juntaria o valor poupando toda semana.',
+        'Converse com alguém sobre um ativo e um passivo da casa e anote a diferença em suas palavras.',
+      ],
+    };
+
+    const moduleQuestions = {
+      fracoes: {
+        easy: [
+          { skill: "unit", question: "Qual fração representa UM pedaço de uma torta dividida em 8 partes?", options: ["1/8", "8/1", "1/4", "1/6"], correct: 0, explanation: "A fração unitária para 8 partes é 1/8." },
+          { skill: "parts", question: "Numa caixa com 10 lápis, 3 são vermelhos. Que fração representa os lápis vermelhos?", options: ["3/10", "10/3", "1/3", "3/7"], correct: 0, explanation: "São 3 lápis de um total de 10, então a fração é 3/10." },
+          { skill: "unit", question: "Se um bolo é dividido em 5 partes iguais, como se escreve a fração de uma fatia?", options: ["1/5", "5/1", "1/4", "5/5"], correct: 0, explanation: "Uma fatia de um total de cinco é 1/5." },
+          { skill: "parts", question: "De 7 dias da semana, você viajou por 2. Que fração da semana você viajou?", options: ["2/7", "7/2", "1/7", "2/5"], correct: 0, explanation: "Você viajou 2 dias de um total de 7, então a fração é 2/7." }
+        ],
+        medium: [
+          { skill: "compare", question: "Quem comeu mais? Ana, que comeu 1/2 da pizza, ou Beto, que comeu 1/3?", options: ["Ana", "Beto", "Comeram igual", "Não sei"], correct: 0, explanation: "1/2 (metade) é maior que 1/3 (um terço)." },
+          { skill: "equivalent", question: "Qual fração é o mesmo que 2/4?", options: ["1/2", "1/4", "2/2", "4/2"], correct: 0, explanation: "Dividindo o numerador e o denominador de 2/4 por 2, encontramos a fração equivalente 1/2." },
+          { skill: "compare", question: "O que é maior, 3/4 de um real ou 2/4 de um real?", options: ["3/4", "2/4", "São iguais", "Nenhum"], correct: 0, explanation: "Com o mesmo denominador (4), a fração com maior numerador (3) é maior." },
+          { skill: "equivalent", question: "A fração 5/10 é equivalente a qual outra?", options: ["1/2", "1/5", "10/5", "5/5"], correct: 0, explanation: "5 é metade de 10, então 5/10 é o mesmo que 1/2." }
+        ],
+        hard: [
+          { skill: "simplify", question: "Qual é a forma mais simples da fração 9/12?", options: ["3/4", "1/2", "9/3", "4/3"], correct: 0, explanation: "O maior número que divide 9 e 12 é 3. (9÷3)/(12÷3) = 3/4." },
+          { skill: "likeDen", question: "Uma jarra tem 2/5 de litro de suco de laranja e 1/5 de suco de limão. Qual a fração total de suco?", options: ["3/5", "3/10", "2/25", "2/10"], correct: 0, explanation: "Com denominadores iguais, somamos os numeradores: 2/5 + 1/5 = 3/5." },
+          { skill: "simplify", question: "Simplifique a fração 8/24.", options: ["1/3", "1/4", "2/6", "8/12"], correct: 0, explanation: "O maior divisor comum entre 8 e 24 é 8. Dividindo ambos por 8, temos 1/3." },
+          { skill: "likeDen", question: "Você tinha 7/8 de uma barra de chocolate e comeu 3/8. Quanto sobrou?", options: ["4/8", "10/8", "4/0", "1/2"], correct: 0, explanation: "Subtraindo os numeradores: 7 - 3 = 4. A resposta é 4/8, que também é 1/2." }
+        ]
+      },
+      decimais: {
+        easy: [
+          { question: "Qual número decimal representa 25 centavos?", options: ["0,25", "2,5", "0,025", "25,0"], correct: 0, explanation: "25 centavos é uma parte de 1 real, representado como 0,25." },
+          { question: "Quanto é 1,5 + 0,5?", options: ["2,0", "1,0", "1,55", "0,10"], correct: 0, explanation: "Um real e meio mais cinquenta centavos é igual a dois reais (2,0)." },
+          { question: "Como se escreve 7 décimos em forma decimal?", options: ["0,7", "7,0", "0,07", "70"], correct: 0, explanation: "7 décimos significa 7 partes de 10, ou 0,7." },
+          { question: "Qual o resultado de 3,2 + 1,1?", options: ["4,3", "4,0", "3,3", "2,1"], correct: 0, explanation: "Somando as partes inteiras (3+1=4) e as partes decimais (2+1=3) temos 4,3." },
+        ],
+        medium: [
+          { question: "Qual é maior: 2,8 ou 2,75?", options: ["2,8", "2,75", "São iguais", "Não sei"], correct: 0, explanation: "Podemos pensar em 2,8 como 2,80. Assim, 2,80 é maior que 2,75." },
+          { question: "Seu irmão mede 1,45m e você 1,60m. Qual a diferença de altura?", options: ["0,15m", "15m", "1,15m", "0,25m"], correct: 0, explanation: "1,60 - 1,45 = 0,15 metros (ou 15 centímetros)." },
+          { question: "Um livro custa R$15,50 e um caderno R$5,25. Quanto custam os dois juntos?", options: ["R$20,75", "R$10,25", "R$20,25", "R$21,00"], correct: 0, explanation: "Alinhe as vírgulas e some: 15,50 + 5,25 = 20,75." },
+          { question: "Qual fração é igual a 0,5?", options: ["1/2", "1/5", "5/1", "1/4"], correct: 0, explanation: "0,5 representa metade, que é a fração 1/2." }
+        ],
+        hard: [
+          { question: "Quanto é 3 x 0,5?", options: ["1,5", "3,5", "0,15", "3,0"], correct: 0, explanation: "Três vezes metade (0,5) é igual a uma vez e meia (1,5)." },
+          { question: "Dividindo R$10,00 para 4 amigos, quanto cada um recebe?", options: ["R$2,50", "R$2,00", "R$4,00", "R$1,50"], correct: 0, explanation: "10 dividido por 4 é 2,5. Em dinheiro, R$2,50." },
+          { question: "Se um quilo de queijo custa R$20, quanto custa 0,25 quilo?", options: ["R$5,00", "R$4,00", "R$2,50", "R$10,00"], correct: 0, explanation: "0,25 é o mesmo que 1/4. Um quarto de 20 é 5." },
+          { question: "Quanto é 1 - 0,3?", options: ["0,7", "1,3", "0,97", "7,0"], correct: 0, explanation: "Pense em 1,0 - 0,3. O resultado é 0,7." }
+        ]
+      },
+      operacoes: {
+        easy: [
+          { question: "Quanto é 25 + 18?", options: ["43", "33", "45", "38"], correct: 0, explanation: "25 + 10 = 35. 35 + 8 = 43." },
+          { question: "Calcule 50 - 22:", options: ["28", "38", "32", "18"], correct: 0, explanation: "50 - 20 = 30. 30 - 2 = 28." },
+          { question: "5 + 5 + 5 é o mesmo que?", options: ["3 x 5", "3 + 5", "5 / 3", "5 - 3"], correct: 0, explanation: "Somar 5 três vezes é a definição de 3 x 5." },
+          { question: "Se você tem 10 biscoitos e come 4, quantos sobram?", options: ["6", "14", "5", "40"], correct: 0, explanation: "Esta é uma subtração simples: 10 - 4 = 6." }
+        ],
+        medium: [
+          { question: "4 caixas com 6 lápis cada. Total de lápis?", options: ["24", "10", "18", "20"], correct: 0, explanation: "4 vezes 6 é igual a 24." },
+          { question: "Se 3 amigos dividem 21 figurinhas, quantas cada um ganha?", options: ["7", "6", "8", "5"], correct: 0, explanation: "21 dividido por 3 é 7." },
+          { question: "Quanto é (2 + 3) x 4?", options: ["20", "14", "9", "24"], correct: 0, explanation: "Primeiro resolvemos o que está nos parênteses: 2 + 3 = 5. Depois multiplicamos: 5 x 4 = 20." },
+          { question: "Um filme tem 90 minutos. Se você já assistiu 45, quantos minutos faltam?", options: ["45", "90", "135", "30"], correct: 0, explanation: "90 - 45 = 45. Falta metade do filme." }
+        ],
+        hard: [
+          { question: "Um ônibus tem 40 lugares. Se 3/4 estão ocupados, quantas pessoas estão no ônibus?", options: ["30", "10", "40", "25"], correct: 0, explanation: "1/4 de 40 é 10. Então 3/4 são 3 x 10 = 30." },
+          { question: "Comecei com 50, ganhei 25 e gastei 15. Com quanto fiquei?", options: ["60", "75", "50", "35"], correct: 0, explanation: "50 + 25 = 75. 75 - 15 = 60." },
+          { question: "Quanto é 100 - (5 x 10)?", options: ["50", "95", "450", "90"], correct: 0, explanation: "Primeiro a multiplicação: 5 x 10 = 50. Depois a subtração: 100 - 50 = 50." },
+          { question: "Se um trem viaja a 60 km por hora, que distância ele percorre em 2 horas e meia?", options: ["150 km", "120 km", "180 km", "90 km"], correct: 0, explanation: "Em 2 horas, ele percorre 120 km. Em meia hora, 30 km. Total: 120 + 30 = 150 km." }
+        ]
+      },
+      logica: {
+        easy: [
+          { question: "Qual animal não pertence ao grupo: Gato, Cachorro, Peixe, Pássaro?", options: ["Peixe", "Gato", "Cachorro", "Pássaro"], correct: 0, explanation: "O peixe vive na água, os outros não." },
+          { question: "O que vem depois: A, C, E, G, __?", options: ["I", "H", "F", "J"], correct: 0, explanation: "A sequência pula uma letra do alfabeto a cada vez." },
+          { question: "Se a luva está para a mão, o sapato está para o...", options: ["Pé", "Cabeça", "Braço", "Pescoço"], correct: 0, explanation: "É uma analogia de função. A luva cobre a mão, o sapato cobre o pé." },
+          { question: "Qual número completa a série: 10, 20, 30, __, 50?", options: ["40", "35", "60", "25"], correct: 0, explanation: "O padrão é somar 10 a cada número." }
+        ],
+        medium: [
+          { question: "Se ontem foi segunda, que dia será depois de amanhã?", options: ["Quinta-feira", "Quarta-feira", "Sexta-feira", "Terça-feira"], correct: 0, explanation: "Se ontem foi segunda, hoje é terça. Amanhã é quarta, e depois de amanhã é quinta." },
+          { question: "Tenho 3 caixas. Dentro de cada uma há mais 2 caixas. Total de caixas?", options: ["9", "6", "5", "8"], correct: 0, explanation: "São 3 caixas grandes + (3 x 2) caixas pequenas = 3 + 6 = 9." },
+          { question: "Se todo mamífero bebe leite e uma baleia é um mamífero, então a baleia...", options: ["Bebe leite", "Não bebe leite", "Põe ovos", "É um peixe"], correct: 0, explanation: "Esta é uma dedução lógica simples. Se a regra se aplica a todos do grupo, aplica-se a um membro do grupo." },
+          { question: "Qual palavra não combina: Maçã, Banana, Cenoura, Uva?", options: ["Cenoura", "Maçã", "Banana", "Uva"], correct: 0, explanation: "Cenoura é um legume, enquanto as outras são frutas." }
+        ],
+        hard: [
+          { question: "Numa corrida, você ultrapassa o segundo colocado. Em que lugar você fica?", options: ["Segundo", "Primeiro", "Terceiro", "Último"], correct: 0, explanation: "Se você ultrapassa o segundo, você assume o lugar dele: segundo lugar." },
+          { question: "Um pai tem 30 anos e o filho 5. Daqui a 10 anos, qual será a idade do pai?", options: ["40 anos", "35 anos", "45 anos", "50 anos"], correct: 0, explanation: "A pergunta foca na idade do pai. 30 + 10 = 40 anos." },
+          { question: "Dois pais e dois filhos foram pescar. Cada um pescou um peixe. No total, foram pescados 3 peixes. Como é possível?", options: ["Eram um avô, um pai e um filho", "Um peixe fugiu", "Um deles não pescou", "A conta está errada"], correct: 0, explanation: "O grupo é formado por 3 pessoas: o avô (que é pai), o pai (que é filho do avô e pai do neto) e o filho." },
+          { question: "Se leva 1 minuto para cortar uma tábua em 2 pedaços, quanto tempo leva para cortá-la em 4 pedaços?", options: ["3 minutos", "4 minutos", "2 minutos", "5 minutos"], correct: 0, explanation: "Para ter 4 pedaços, você precisa fazer 3 cortes. Se cada corte leva 1 minuto, o total é de 3 minutos." }
+        ]
+      },
+      financas: {
+        easy: [
+          { question: "Você tem uma nota de R$10 e compra um picolé de R$3. Quanto recebe de troco?", options: ["R$7", "R$13", "R$3", "R$10"], correct: 0, explanation: "10 - 3 = 7. O troco é de R$7." },
+          { question: "O que custa mais: um chiclete de R$1 ou um chocolate de R$4?", options: ["O chocolate", "O chiclete", "Custam o mesmo", "Nenhum"], correct: 0, explanation: "4 é um número maior que 1, então o chocolate custa mais." },
+          { question: "Para que serve um cofrinho?", options: ["Para guardar dinheiro", "Para gastar dinheiro", "Para decorar", "Para brincar"], correct: 0, explanation: "A principal função de um cofrinho é ajudar a poupar, ou seja, guardar dinheiro." },
+          { question: "Qual nota de Real tem o maior valor?", options: ["R$200", "R$100", "R$50", "R$20"], correct: 0, explanation: "A nota de R$200 é a que vale mais entre as opções." }
+        ],
+        medium: [
+          { question: "Comprar um novo videogame é uma necessidade ou um desejo?", options: ["Desejo", "Necessidade", "Os dois", "Nenhum"], correct: 0, explanation: "Necessidades são coisas essenciais como comida e moradia. Videogame é um desejo, algo legal de ter, mas não essencial." },
+          { question: "Você quer um livro de R$40 e guarda R$10 por mês. Em quantos meses poderá comprá-lo?", options: ["4 meses", "10 meses", "30 meses", "3 meses"], correct: 0, explanation: "40 dividido por 10 é 4. Você precisará de 4 meses." },
+          { question: "O que é um 'orçamento'?", options: ["Um plano para seu dinheiro", "Todo o dinheiro que você tem", "Uma conta no banco", "Um tipo de imposto"], correct: 0, explanation: "Orçamento é um plano de como você vai ganhar, gastar e guardar seu dinheiro." },
+          { question: "Se você ganha R$20 de mesada e guarda R$5, que fração da sua mesada você guardou?", options: ["1/4", "1/5", "5/20", "1/2"], correct: 0, explanation: "Você guardou 5 de 20, que é a fração 5/20. Simplificando (dividindo por 5), temos 1/4." }
+        ],
+        hard: [
+          { question: "Se você guarda R$100 e ganha R$1 de 'prêmio' (juros) por mês, quanto terá em 2 meses?", options: ["R$102", "R$101", "R$200", "R$100"], correct: 0, explanation: "Você terá seus R$100 + R$1 do primeiro mês + R$1 do segundo mês = R$102." },
+          { question: "O que é um 'ativo' (algo que põe dinheiro no seu bolso)?", options: ["Uma máquina de doces que você aluga", "Um brinquedo que você comprou", "Um lanche que você comeu", "Roupas novas"], correct: 0, explanation: "Um ativo gera renda. A máquina de doces, ao ser alugada, gera dinheiro para você sem que você precise trabalhar." },
+          { question: "Se você investe R$10 e seu investimento dobra de valor, quanto você tem agora?", options: ["R$20", "R$10", "R$11", "R$30"], correct: 0, explanation: "Dobrar significa multiplicar por 2. R$10 x 2 = R$20." },
+          { question: "Qual é um exemplo de 'passivo' (algo que tira dinheiro do seu bolso)?", options: ["A assinatura de um jogo online", "Um dinheiro que você emprestou e recebeu de volta", "Vender limonada na rua", "Receber sua mesada"], correct: 0, explanation: "Um passivo é um custo recorrente. A assinatura de um jogo tira dinheiro do seu bolso todo mês." }
+        ]
+      },
+    };
+
+    function MasteryChart({ mastery }) {
+      const canvasRef = useRef(null);
+      const chartRef = useRef(null);
+
+      const chartData = useMemo(() => Object.keys(FRACTION_SKILLS).map(k => mastery[k]?.recentCorrect ?? 0), [mastery]);
+      const chartLabels = useMemo(() => Object.values(FRACTION_SKILLS).map(s => s.label), []);
+
+      useEffect(() => {
+        const ctx = canvasRef.current?.getContext('2d');
+        if (!ctx) return;
+        if (chartRef.current) chartRef.current.destroy();
+        chartRef.current = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: chartLabels,
+            datasets: [{
+              label: 'Acertos recentes (meta: 3)',
+              data: chartData,
+              backgroundColor: 'rgba(147, 51, 234, 0.6)',
+              borderColor: 'rgba(147, 51, 234, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, max: 3, ticks: { stepSize: 1 } } },
+            plugins: { legend: { display: false } },
+          }
+        });
+        return () => chartRef.current?.destroy();
+      }, [chartData, chartLabels]);
+
+      return <div className="h-52"><canvas ref={canvasRef}></canvas></div>;
+    }
+
+    function fireConfetti() {
+      for (let i = 0; i < 120; i++) {
+        const d = document.createElement('div');
+        d.className = 'confetti';
+        d.style.left = Math.random() * 100 + 'vw';
+        d.style.background = `hsl(${Math.random() * 360},80%,60%)`;
+        d.style.transform = `rotate(${Math.random() * 360}deg)`;
+        d.style.animationDelay = (Math.random() * 0.6) + 's';
+        document.body.appendChild(d);
+        setTimeout(() => d.remove(), 2600);
+      }
+    }
+
+    const MarkdownRenderer = React.memo(function MarkdownRenderer({ text }) {
+      const contentRef = useRef(null);
+
+      const blocks = useMemo(() => {
+        if (!text) return [];
+        return text.split(/\n+/)
+          .map(line => line.trim())
+          .filter(Boolean)
+          .map(line => {
+            if (line === '---') return { type: 'divider' };
+            if (line.startsWith('## ')) return { type: 'h2', value: line.substring(3) };
+            if (line.startsWith('### ')) return { type: 'h3', value: line.substring(4) };
+            const parts = line
+              .split(/(\*\*.*?\*\*|\$.*?\$|\$\$.*?\$\$)/g)
+              .filter(Boolean)
+              .map(segment => {
+                if (segment.startsWith('**') && segment.endsWith('**')) return { type: 'strong', value: segment.slice(2, -2) };
+                if (segment.startsWith('$')) return { type: 'math', value: segment };
+                return { type: 'text', value: segment };
+              });
+            return { type: 'paragraph', parts };
+          });
+      }, [text]);
+
+      useEffect(() => {
+        if (contentRef.current && window.renderMathInElement) {
+          window.renderMathInElement(contentRef.current, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+            ],
+          });
+        }
+      }, [blocks]);
+
+      if (!text) return null;
+
+      return (
+        <div ref={contentRef}>
+          {blocks.map((block, index) => {
+            if (block.type === 'divider') return <hr key={index} className="my-4 border-purple-200" />;
+            if (block.type === 'h2') return <h2 key={index} className="text-xl font-bold mt-4 mb-2">{block.value}</h2>;
+            if (block.type === 'h3') return <h3 key={index} className="text-lg font-bold mt-3 mb-1">{block.value}</h3>;
+            return (
+              <p key={index} className="my-2">
+                {block.parts.map((part, i) => {
+                  if (part.type === 'strong') return <strong key={i}>{part.value}</strong>;
+                  if (part.type === 'math') return <span key={i}>{part.value}</span>;
+                  return <span key={i}>{part.value}</span>;
+                })}
+              </p>
+            );
+          })}
+        </div>
+      );
+    });
+
+    const NameEntryScreen = React.memo(function NameEntryScreen({ initialName = "", onSubmit }) {
+      const [localName, setLocalName] = useState(initialName);
+
+      useEffect(() => {
+        setLocalName(initialName);
+      }, [initialName]);
+
+      const handleChange = useCallback((event) => {
+        setLocalName(event.target.value);
+      }, []);
+
+      const handleSubmit = useCallback(() => {
+        onSubmit(localName);
+      }, [localName, onSubmit]);
+
+      const handleKeyDown = useCallback((event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          handleSubmit();
+        }
+      }, [handleSubmit]);
+
+      const canSubmit = localName.trim().length > 0;
+
+      return (
+        <div className="min-h-screen flex items-center justify-center p-6">
+          <div className="max-w-xl w-full mx-auto text-center pop">
+            <div className="mb-8 float text-6xl">🚀</div>
+            <h1 className="text-5xl font-bold text-white mb-6">Qual é o seu nome, explorador(a) de números?</h1>
+            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 mb-8 border-2 border-white/20">
+              <input
+                type="text"
+                value={localName}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                className="w-full bg-transparent text-white text-3xl text-center font-bold border-b-2 border-yellow-300 focus:outline-none placeholder-white/50"
+                placeholder="Digite seu nome aqui"
+              />
+            </div>
+            <button
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className="bg-yellow-400 hover:bg-yellow-500 text-purple-900 font-bold text-2xl px-12 py-6 rounded-2xl shadow-2xl transform hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Próximo ✨
+            </button>
+          </div>
+        </div>
+      );
+    });
+
+    const ChatMessage = React.memo(function ChatMessage({ message }) {
+      const isUser = message.role === 'user';
+      return (
+        <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+          <div className={`max-w-lg p-3 rounded-2xl ${isUser ? 'bg-blue-500 text-white' : 'bg-white shadow'}`}>
+            <MarkdownRenderer text={message.parts?.[0]?.text || ''} />
+          </div>
+        </div>
+      );
+    });
+
+    const ChatView = React.memo(function ChatView({ chatHistory, isChatLoading, onBack, onSend }) {
+      const [inputValue, setInputValue] = useState("");
+      const chatEndRef = useRef(null);
+
+      useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [chatHistory, isChatLoading]);
+
+      const handleChange = useCallback((event) => {
+        setInputValue(event.target.value);
+      }, []);
+
+      const handleSubmit = useCallback(() => {
+        const trimmed = inputValue.trim();
+        if (!trimmed || isChatLoading) return;
+        setInputValue("");
+        onSend(trimmed);
+      }, [inputValue, onSend, isChatLoading]);
+
+      const handleKeyDown = useCallback((event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          handleSubmit();
+        }
+      }, [handleSubmit]);
+
+      return (
+        <div className="h-screen flex flex-col bg-gray-100">
+          <header className="bg-white shadow-md p-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-3xl">💬</span>
+              <div>
+                <h1 className="text-xl font-bold text-gray-800">Converse com o Bruno</h1>
+                <p className="text-sm text-gray-500">Seu mentor de matemática e finanças</p>
+              </div>
+            </div>
+            <button onClick={onBack} className="text-gray-500 hover:text-gray-800">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            </button>
+          </header>
+          <main className="flex-1 overflow-y-auto p-4 space-y-4">
+            {chatHistory.map((msg, index) => (
+              <ChatMessage key={index} message={msg} />
+            ))}
+            {isChatLoading && (
+              <div className="flex justify-start">
+                <div className="max-w-lg p-3 rounded-2xl bg-white shadow animate-pulse">...</div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </main>
+          <footer className="bg-white p-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Faça uma pergunta para o Bruno..."
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+              <button
+                onClick={handleSubmit}
+                disabled={isChatLoading || !inputValue.trim()}
+                className="bg-purple-600 text-white p-3 rounded-xl hover:bg-purple-700 disabled:opacity-50"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/></svg>
+              </button>
+            </div>
+          </footer>
+        </div>
+      );
+    });
+
+    function App() {
+      const clickSound = useSound('click');
+      const successSound = useSound('ok');
+      const errorSound = useSound('err');
+
+      const [currentScreen, setCurrentScreen] = useState("name-entry");
+      const [studentName, setStudentName] = useState("");
+      const [studentAge, setStudentAge] = useState("");
+      const [userLevel, setUserLevel] = useState(null);
+      const [currentModule, setCurrentModule] = useState(null);
+      const [currentQuestion, setCurrentQuestion] = useState(0);
+      const [processedQ, setProcessedQ] = useState(null);
+      const [score, setScore] = useState(0);
+      const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
+      const [consecutiveWrong, setConsecutiveWrong] = useState(0);
+      const [difficulty, setDifficulty] = useState("medium");
+      const [feedback, setFeedback] = useState(null);
+      const [completedPlanets, setCompletedPlanets] = useState([]);
+      const [totalStars, setTotalStars] = useState(0);
+      const [diagnosticAnswers, setDiagnosticAnswers] = useState([]);
+      const [answeredInModule, setAnsweredInModule] = useState(0);
+      const [remedialQueue, setRemedialQueue] = useState([]);
+      const [skillMastery, setSkillMastery] = useState(() => (
+        Object.fromEntries(Object.keys(FRACTION_SKILLS).map(k => [k, { recentCorrect: 0, totalCorrect: 0 }]))
+      ));
+      const [isGeminiLoading, setIsGeminiLoading] = useState(false);
+      const [geminiContent, setGeminiContent] = useState(null);
+      const [geminiHint, setGeminiHint] = useState(null);
+      const [isHintLoading, setIsHintLoading] = useState(false);
+      const [isMentorLoading, setIsMentorLoading] = useState(false);
+      const [mentorMessage, setMentorMessage] = useState(`Olá! Eu sou Bruno, seu mentor nesta jornada. Estou animado para explorar o universo dos números com você!`);
+      const [currentStep, setCurrentStep] = useState(0);
+      const [chatHistory, setChatHistory] = useState([]);
+      const [isChatLoading, setIsChatLoading] = useState(false);
+      const [aiGeneratedQuestion, setAIGeneratedQuestion] = useState(null);
+      const [intelligentAgenda, setIntelligentAgenda] = useState([]);
+      const [apiKey, setApiKey] = useState(() => {
+        if (typeof window === 'undefined') return DEFAULT_GEMINI_KEY;
+        try {
+          const stored = window.localStorage?.getItem('brunoGeminiKey');
+          return window.GOOGLE_GEMINI_API_KEY || stored || DEFAULT_GEMINI_KEY;
+        } catch (error) {
+          console.warn('Não foi possível ler a chave salva localmente.', error);
+          return window.GOOGLE_GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+        }
+      });
+      const [apiKeyStatus, setApiKeyStatus] = useState(null);
+      const abortControllers = useRef(new Set());
+      const chatHistoryRef = useRef([]);
+
+      const profile = useMemo(() => AGE_PROFILES[studentAge] || AGE_PROFILES.default, [studentAge]);
+
+      useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const trimmed = (apiKey || '').trim();
+        window.GOOGLE_GEMINI_API_KEY = trimmed;
+        try {
+          if (trimmed) {
+            window.localStorage?.setItem('brunoGeminiKey', trimmed);
+          } else {
+            window.localStorage?.removeItem('brunoGeminiKey');
+          }
+        } catch (error) {
+          console.warn('Não foi possível armazenar a chave da IA.', error);
+        }
+      }, [apiKey]);
+
+      useEffect(() => () => {
+        abortControllers.current.forEach(ctrl => ctrl.abort());
+        abortControllers.current.clear();
+      }, []);
+
+      useEffect(() => {
+        chatHistoryRef.current = chatHistory;
+      }, [chatHistory]);
+
+      const trackAgenda = useCallback((entry) => {
+        setIntelligentAgenda(prev => [entry, ...prev].slice(0, 5));
+      }, []);
+
+      const buildContext = useCallback(() => {
+        if (!processedQ) return 'Sem questão em foco.';
+        const concept = processedQ.skill ? FRACTION_SKILLS[processedQ.skill]?.label || processedQ.skill : currentModule;
+        return `Questão atual: ${processedQ.question}\nAlternativas: ${processedQ.options.join(', ')}\nHabilidade trabalhada: ${concept}.`;
+      }, [processedQ, currentModule]);
+
+      const handleApiKeyChange = useCallback((value) => {
+        setApiKey(value);
+        setApiKeyStatus(null);
+      }, []);
+
+      const handleResetApiKey = useCallback(() => {
+        setApiKey(DEFAULT_GEMINI_KEY);
+        setApiKeyStatus({ state: 'info', message: 'Chave padrão restaurada.' });
+      }, []);
+
+      const handleTestApiKey = useCallback(async () => {
+        const key = (apiKey || '').trim();
+        if (!key) {
+          setApiKeyStatus({ state: 'error', message: 'Informe uma chave para testar.' });
+          return;
+        }
+        setApiKeyStatus({ state: 'testing' });
+        const model = (profile?.preferredModel || 'gemini-1.5-flash-latest').replace(/^models\//i, '');
+        const endpoints = [
+          `https://generativelanguage.googleapis.com/v1/models/${model}?key=${key}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}?key=${key}`,
+        ];
+        let lastError = null;
+        for (const endpoint of endpoints) {
+          try {
+            const response = await fetch(endpoint, { method: 'GET' });
+            if (!response.ok) throw new Error(`Status ${response.status}`);
+            const data = await response.json();
+            setApiKeyStatus({
+              state: 'success',
+              message: `Tudo certo! Modelo disponível: ${data.displayName || data.name || model}.`,
+            });
+            return;
+          } catch (error) {
+            lastError = error instanceof Error ? error : new Error(String(error));
+          }
+        }
+        setApiKeyStatus({
+          state: 'error',
+          message: `Não consegui confirmar a chave (${lastError?.message || 'motivo desconhecido'}).`,
+        });
+      }, [apiKey, profile]);
+
+      const callGeminiAPIWithRetries = useCallback(async (payload, retries = 3, delay = 1000) => {
+        const apiKey = window.GOOGLE_GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+        const preferred = (profile?.preferredModel || 'gemini-1.5-flash-latest').replace(/^models\//i, '');
+        const modelCandidates = Array.from(new Set([
+          preferred,
+          preferred.endsWith('-latest') ? preferred.replace(/-latest$/, '') : `${preferred}-latest`,
+        ].filter(Boolean)));
+        const endpoints = modelCandidates.flatMap(modelName => ([
+          `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+        ]));
+
+        let lastError = null;
+        const controller = new AbortController();
+        abortControllers.current.add(controller);
+
+        try {
+          for (const endpoint of endpoints) {
+            for (let attempt = 0; attempt < retries; attempt++) {
+              try {
+                const response = await fetch(endpoint, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload),
+                  signal: controller.signal,
+                });
+                if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+                const text = candidate?.content?.parts?.map(part => part.text).join('\n');
+                if (text) return text;
+                throw new Error('Resposta da IA sem conteúdo utilizável.');
+              } catch (error) {
+                lastError = error instanceof Error ? error : new Error(String(error));
+                if (controller.signal.aborted) throw new Error('Requisição cancelada');
+
+                const is404 = /404/.test(lastError.message);
+                const isLastAttempt = attempt === retries - 1;
+                if (is404 || isLastAttempt) {
+                  break;
+                }
+                await new Promise(res => setTimeout(res, delay * Math.pow(2, attempt)));
+              }
+            }
+            if (controller.signal.aborted) break;
+          }
+        } finally {
+          abortControllers.current.delete(controller);
+        }
+
+        throw lastError || new Error('Erro desconhecido ao chamar a IA.');
+      }, [profile]);
+
+      const startClick = useCallback(() => {
+        clickSound();
+      }, [clickSound]);
+
+      const handleGetExplanation = useCallback(async () => {
+        if (!processedQ) return;
+        setIsGeminiLoading(true);
+        setGeminiContent(null);
+        const systemPrompt = `Você é Bruno, um professor de matemática amigável, paciente e criativo. O aluno se chama ${studentName || 'Explorador'} e tem ${studentAge || 'idade indefinida'} anos. Use um tom ${profile.tone}. ${profile.encouragementCue}`;
+        const userQuery = `Reexplique de uma forma diferente porque a resposta correta da pergunta "${processedQ.question}" é "${processedQ.options[processedQ.correct]}". Inclua um erro comum para evitar, uma dica prática e finalize convidando o aluno a compartilhar a ideia com alguém. Contexto desejado: ${profile.storyHook}`;
+        const payload = { contents: [{ role: "user", parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
+        try {
+          const explanation = await callGeminiAPIWithRetries(payload);
+          setGeminiContent({ type: 'explanation', text: explanation });
+          trackAgenda({ type: 'explicacao', message: 'Bruno gerou uma nova explicação.' });
+        } catch (error) {
+          setGeminiContent({ type: 'error', text: `Não consegui obter uma nova explicação agora. Detalhes: ${error.message}` });
+        } finally {
+          setIsGeminiLoading(false);
+        }
+      }, [processedQ, studentName, studentAge, profile, callGeminiAPIWithRetries, trackAgenda]);
+
+      const handleGetSimilarProblem = useCallback(async (isDynamic = false) => {
+        setIsGeminiLoading(true);
+        const systemPrompt = `Você é Bruno, um criador de desafios matemáticos para ${studentName || 'o aluno'} (${studentAge || 'idade indefinida'} anos). Use um tom ${profile.tone}, traga curiosidade e varie o tipo de pergunta para manter o interesse.`;
+        const context = isDynamic
+          ? `Contexto adaptativo: módulo ${currentModule}, dificuldade ${difficulty}.` + (processedQ?.skill ? ` Habilidade: ${FRACTION_SKILLS[processedQ.skill]?.label || processedQ.skill}.` : '')
+          : buildContext();
+        const userQuery = `Gere um exercício inédito com base no contexto a seguir:\n${context}\nExija uma justificativa breve na explicação correta e utilize elementos conforme este direcionamento: ${profile.storyHook}`;
+        const schema = {
+          type: "OBJECT",
+          properties: {
+            question: { type: "STRING" },
+            options: { type: "ARRAY", items: { type: "STRING" }, minItems: 4, maxItems: 4 },
+            correct: { type: "INTEGER" },
+            rationale: { type: "STRING" }
+          },
+          required: ["question", "options", "correct"]
+        };
+        const payload = {
+          contents: [{ role: "user", parts: [{ text: userQuery }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: { responseMimeType: "application/json", responseSchema: schema }
+        };
+        try {
+          const resultText = await callGeminiAPIWithRetries(payload);
+          const newQ = JSON.parse(resultText);
+          if (!Array.isArray(newQ.options) || newQ.options.length !== 4 || typeof newQ.correct !== 'number') {
+            throw new Error('Estrutura inválida recebida da IA.');
+          }
+          const geminiQuestion = { ...newQ, skill: processedQ?.skill || 'gemini-practice', visual: '✨ Desafio Inteligente do Bruno!' };
+          setRemedialQueue(prev => [geminiQuestion, ...prev]);
+          setGeminiContent(null);
+          setGeminiHint(null);
+          setAIGeneratedQuestion(geminiQuestion);
+          trackAgenda({ type: 'questao', message: 'Nova questão contextual criada pela IA.' });
+        } catch (error) {
+          setGeminiContent({ type: 'error', text: `Não consegui criar uma nova questão agora. Detalhes: ${error.message}` });
+        } finally {
+          setIsGeminiLoading(false);
+        }
+      }, [studentName, studentAge, currentModule, difficulty, processedQ, profile, callGeminiAPIWithRetries, buildContext, trackAgenda]);
+
+      const handleGetHint = useCallback(async () => {
+        if (!processedQ) return;
+        setIsHintLoading(true);
+        setGeminiHint(null);
+        const systemPrompt = `Você é Bruno, um tutor de matemática. Fale com ${studentName || 'o aluno'} (${studentAge || 'idade indefinida'} anos) em um tom ${profile.tone}. ${profile.encouragementCue}`;
+        const userQuery = `Pergunta: ${processedQ.question}. Opções: ${processedQ.options.join(', ')}. Escreva UMA dica curiosa que aponte o próximo passo sem entregar a resposta.`;
+        const payload = { contents: [{ role: "user", parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
+        try {
+          const hint = await callGeminiAPIWithRetries(payload);
+          setGeminiHint(hint);
+        } catch (error) {
+          setGeminiHint(`Não consegui gerar uma dica agora (${error.message}). Tente novamente!`);
+        } finally {
+          setIsHintLoading(false);
+        }
+      }, [processedQ, studentName, studentAge, profile, callGeminiAPIWithRetries]);
+
+      const handleGetMentorFeedback = useCallback(async () => {
+        setIsMentorLoading(true);
+        let progressSummary = `Planetas completados: ${completedPlanets.length} de ${planets.length}. Estrelas totais: ${totalStars}.`;
+        if (completedPlanets.includes('fracoes')) {
+          const strongSkills = Object.entries(skillMastery)
+            .filter(([id, s]) => s.recentCorrect >= FRACTION_SKILLS[id].goal)
+            .map(([id]) => FRACTION_SKILLS[id].label);
+          const weakSkills = Object.entries(skillMastery)
+            .filter(([id, s]) => s.recentCorrect < FRACTION_SKILLS[id].goal && s.totalCorrect > 0)
+            .map(([id]) => FRACTION_SKILLS[id].label);
+          if (strongSkills.length > 0) progressSummary += ` Destaques: ${strongSkills.join(', ')}.`;
+          if (weakSkills.length > 0) progressSummary += ` Focos sugeridos: ${weakSkills.join(', ')}.`;
+        }
+        const systemPrompt = `Você é Bruno Mayson, um mentor de matemática gentil e encorajador. Use um tom ${profile.tone} e siga esta orientação: ${profile.mentorCue} Resuma em até duas frases.`;
+        const userQuery = `Aluno: ${studentName || 'Explorador'} (${studentAge || 'idade indefinida'}). Progresso: ${progressSummary}`;
+        const payload = { contents: [{ role: "user", parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
+        try {
+          const message = await callGeminiAPIWithRetries(payload);
+          setMentorMessage(message);
+        } catch (error) {
+          setMentorMessage(`Continue firme! (Falha ao atualizar mensagem: ${error.message})`);
+        } finally {
+          setIsMentorLoading(false);
+        }
+      }, [completedPlanets, totalStars, skillMastery, studentName, studentAge, profile, callGeminiAPIWithRetries]);
+
+      const handleSendChatMessage = useCallback(async (message) => {
+        if (isChatLoading) return;
+        const trimmed = (message || '').trim();
+        if (!trimmed) return;
+        const userMessage = { role: "user", parts: [{ text: trimmed }] };
+        const updatedHistory = [...chatHistoryRef.current, userMessage];
+        chatHistoryRef.current = updatedHistory;
+        setChatHistory(updatedHistory);
+        setIsChatLoading(true);
+
+        const systemPrompt = `Você é Bruno Mayson, tutor especialista em matemática e finanças para crianças. O aluno se chama ${studentName || 'Explorador'} e tem ${studentAge || 'idade indefinida'} anos. Use um tom ${profile.tone}. ${profile.chatGuidance}`;
+        const payload = {
+          contents: updatedHistory,
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+        };
+
+        try {
+          const response = await callGeminiAPIWithRetries(payload);
+          setChatHistory(prev => {
+            const next = [...prev, { role: "model", parts: [{ text: response }] }];
+            chatHistoryRef.current = next;
+            return next;
+          });
+          if (/tente responder|qual seria|poderia me dizer/i.test(response)) {
+            trackAgenda({ type: 'pergunta', message: 'Bruno lançou um desafio na conversa.' });
+          }
+        } catch (error) {
+          setChatHistory(prev => {
+            const next = [...prev, { role: "model", parts: [{ text: `Ops! Não consegui responder agora (${error.message}). Tente novamente.` }] }];
+            chatHistoryRef.current = next;
+            return next;
+          });
+        } finally {
+          setIsChatLoading(false);
+        }
+      }, [isChatLoading, studentName, studentAge, profile, callGeminiAPIWithRetries, trackAgenda]);
+
+      const handleChatBack = useCallback(() => {
+        startClick();
+        setCurrentScreen('planets');
+      }, [startClick]);
+
+      useEffect(() => {
+        if (currentScreen === 'planets' && studentName) handleGetMentorFeedback();
+      }, [currentScreen, studentName, handleGetMentorFeedback]);
+
+      const currentQ = useMemo(() => {
+        const questions = moduleQuestions[currentModule]?.[difficulty] || [];
+        if (remedialQueue.length > 0) return remedialQueue[0];
+        if (currentQuestion < questions.length) return questions[currentQuestion];
+        return null;
+      }, [currentModule, difficulty, currentQuestion, remedialQueue]);
+
+      useEffect(() => {
+        if (!currentQ) { setProcessedQ(null); return; }
+        const correctValue = currentQ.options[currentQ.correct];
+        const shuffledOptions = [...currentQ.options].sort(() => Math.random() - 0.5);
+        const newCorrectIndex = shuffledOptions.indexOf(correctValue);
+        let newAlsoCorrectIndexes = [];
+        if (currentQ.alsoCorrect) {
+          const alsoCorrectValues = currentQ.alsoCorrect.map(i => currentQ.options[i]);
+          newAlsoCorrectIndexes = alsoCorrectValues.map(v => shuffledOptions.indexOf(v));
+        }
+        setProcessedQ({ ...currentQ, options: shuffledOptions, correct: newCorrectIndex, alsoCorrect: newAlsoCorrectIndexes });
+      }, [currentQ]);
+
+      const handleNameSubmit = useCallback((value) => {
+        const trimmed = (value || '').trim();
+        if (!trimmed) return;
+        startClick();
+        setStudentName(trimmed);
+        setCurrentScreen('age-gate');
+      }, [startClick]);
+
+      const handleAgeSubmit = useCallback((ageRange) => {
+        setStudentAge(ageRange);
+        setCurrentScreen('welcome');
+      }, []);
+
+      const handleDiagnosticAnswer = useCallback((idx) => {
+        const cur = diagnosticQuestions[currentQuestion];
+        const updatedAnswers = [...diagnosticAnswers, { question: currentQuestion, correct: idx === cur.correct }];
+        setDiagnosticAnswers(updatedAnswers);
+        if (currentQuestion < diagnosticQuestions.length - 1) {
+          setCurrentQuestion(q => q + 1);
+          return;
+        }
+        const correctCount = updatedAnswers.filter(a => a.correct).length;
+        const pct = (correctCount / diagnosticQuestions.length) * 100;
+        setUserLevel(pct >= 80 ? 'advanced' : pct >= 60 ? 'intermediate' : 'beginner');
+        setCurrentScreen('diagnostic-result');
+      }, [currentQuestion, diagnosticAnswers]);
+
+      const startModule = useCallback((planetId) => {
+        startClick();
+        if (planetId === 'chat') {
+          setCurrentScreen('chat');
+          return;
+        }
+        setCurrentModule(planetId);
+        setCurrentQuestion(0);
+        setScore(0);
+        setConsecutiveCorrect(0);
+        setConsecutiveWrong(0);
+        setFeedback(null);
+        setAnsweredInModule(0);
+        setRemedialQueue([]);
+        setGeminiHint(null);
+        setCurrentStep(0);
+        setAIGeneratedQuestion(null);
+        setIntelligentAgenda([]);
+        setDifficulty(userLevel === 'advanced' ? 'hard' : userLevel === 'intermediate' ? 'medium' : 'easy');
+        if (planetId === 'fracoes') {
+          setSkillMastery(Object.fromEntries(Object.keys(FRACTION_SKILLS).map(k => [k, { recentCorrect: 0, totalCorrect: 0 }])));
+        }
+        setCurrentScreen('lesson');
+      }, [startClick, userLevel]);
+
+      const bumpDifficultyIfNeeded = useCallback((count, dir) => {
+        if (dir === 'up' && count >= 3 && difficulty !== 'hard') {
+          setDifficulty(prev => (prev === 'easy' ? 'medium' : 'hard'));
+          setConsecutiveCorrect(0);
+        }
+        if (dir === 'down' && count >= 2 && difficulty !== 'easy') {
+          setDifficulty(prev => (prev === 'hard' ? 'medium' : 'easy'));
+          setConsecutiveWrong(0);
+        }
+      }, [difficulty]);
+
+      const pickRemedialSkillId = useCallback(() => {
+        let pending = Object.entries(skillMastery)
+          .filter(([, s]) => s.recentCorrect === 0 && s.totalCorrect > 0)
+          .map(([id]) => id);
+        if (pending.length === 0) {
+          pending = Object.entries(skillMastery)
+            .filter(([id, s]) => s.recentCorrect < FRACTION_SKILLS[id].goal)
+            .map(([id]) => id);
+        }
+        if (!pending.length) return null;
+        return pending[Math.floor(Math.random() * pending.length)];
+      }, [skillMastery]);
+
+      const enqueueRemedial = useCallback(() => {
+        if (currentModule !== 'fracoes') return;
+        const need = pickRemedialSkillId();
+        if (!need) return;
+        const pools = [difficulty, 'easy', 'medium', 'hard'];
+        for (const d of pools) {
+          const pool = (moduleQuestions.fracoes[d] || []).filter(q => q.skill === need);
+          if (pool.length) {
+            const q = pool[Math.floor(Math.random() * pool.length)];
+            setRemedialQueue(prev => [...prev, q]);
+            break;
+          }
+        }
+      }, [currentModule, pickRemedialSkillId, difficulty]);
+
+      const handleAnswer = useCallback((idx) => {
+        if (!processedQ) return;
+        const corrects = new Set([processedQ.correct, ...(processedQ.alsoCorrect || [])]);
+        const isCorrect = corrects.has(idx);
+        setAnsweredInModule(v => v + 1);
+
+        if (currentModule === 'fracoes' && processedQ.skill && processedQ.skill !== 'gemini-practice') {
+          setSkillMastery(prev => {
+            const updated = { ...prev };
+            if (isCorrect) {
+              const current = updated[processedQ.skill] || { recentCorrect: 0, totalCorrect: 0 };
+              updated[processedQ.skill] = {
+                recentCorrect: Math.min(current.recentCorrect + 1, FRACTION_SKILLS[processedQ.skill].goal),
+                totalCorrect: current.totalCorrect + 1
+              };
+            } else {
+              const current = updated[processedQ.skill] || { recentCorrect: 0, totalCorrect: 0 };
+              updated[processedQ.skill] = { ...current, recentCorrect: 0 };
+            }
+            return updated;
+          });
+        }
+
+        if (isCorrect) {
+          successSound();
+          setScore(v => v + 1);
+          setConsecutiveCorrect(prev => {
+            const next = prev + 1;
+            bumpDifficultyIfNeeded(next, 'up');
+            return next >= 3 ? 0 : next;
+          });
+          setConsecutiveWrong(0);
+          setFeedback({ type: 'success', message: '🌟 Incrível! Você acertou!', explanation: processedQ.explanation });
+          if (!remedialQueue.length && processedQ.skill) {
+            trackAgenda({ type: 'sucesso', message: `Habilidade reforçada: ${processedQ.skill}` });
+          }
+        } else {
+          errorSound();
+          setConsecutiveWrong(prev => {
+            const next = prev + 1;
+            bumpDifficultyIfNeeded(next, 'down');
+            return next >= 2 ? 0 : next;
+          });
+          setConsecutiveCorrect(0);
+          const why = processedQ.whyWrong?.[idx] || "Vamos revisar com um desenho.";
+          const hint = processedQ.skill === 'compare' ? "Dica: tente transformar em décimos ou usar barras."
+            : processedQ.skill === 'simplify' ? "Dica: procure um número que divida em cima e embaixo."
+            : "Dica: numerador = partes pintadas; denominador = partes totais.";
+          setFeedback({
+            type: 'error',
+            message: '🤔 Ainda não está certo — e tudo bem!',
+            explanation: `${why} ${hint}`,
+            encouragement: 'Você pensou com coragem. Vamos tentar de outro jeito!'
+          });
+          trackAgenda({ type: 'reforco', message: 'Planejando nova tentativa personalizada.' });
+          if (!remedialQueue.length) handleGetSimilarProblem(true);
+        }
+
+        if (remedialQueue.length > 0) {
+          setRemedialQueue(q => q.slice(1));
+        }
+      }, [processedQ, currentModule, remedialQueue, successSound, errorSound, bumpDifficultyIfNeeded, handleGetSimilarProblem, trackAgenda]);
+
+      const nextQuestion = useCallback(() => {
+        startClick();
+        setFeedback(null);
+        setGeminiContent(null);
+        setGeminiHint(null);
+        const questions = moduleQuestions[currentModule]?.[difficulty] || [];
+        if (remedialQueue.length <= 1) {
+          if (currentQuestion >= questions.length - 1) {
+            handleGetSimilarProblem(true);
+            return;
+          }
+          if (currentModule === 'fracoes' && answeredInModule > 0 && answeredInModule % 3 === 0) enqueueRemedial();
+          setCurrentQuestion(q => q + 1);
+        }
+      }, [startClick, remedialQueue.length, currentModule, difficulty, currentQuestion, answeredInModule, enqueueRemedial, handleGetSimilarProblem]);
+
+      const startExercises = useCallback(() => {
+        startClick();
+        setCurrentScreen('learning');
+      }, [startClick]);
+
+      const finishModule = useCallback(() => {
+        if (currentModule === 'fracoes') {
+          const unmetGoals = Object.entries(skillMastery)
+            .filter(([id, skillData]) => skillData.recentCorrect < FRACTION_SKILLS[id].goal);
+          if (unmetGoals.length > 0) {
+            enqueueRemedial();
+            setCurrentQuestion(0);
+            setCurrentScreen('learning');
+            return;
+          }
+        }
+        const answered = Math.max(answeredInModule, 1);
+        const finalScore = (score / answered) * 10;
+        const stars = Math.round(finalScore / 2);
+        setTotalStars(v => v + stars);
+        if (finalScore >= 8 && !completedPlanets.includes(currentModule)) {
+          setCompletedPlanets(v => [...v, currentModule]);
+        }
+        if (finalScore >= 8) fireConfetti();
+        setCurrentScreen('module-complete');
+      }, [currentModule, skillMastery, enqueueRemedial, answeredInModule, score, completedPlanets]);
+
+      const AgeGateScreen = () => (
+        <div className="min-h-screen flex items-center justify-center p-6">
+          <div className="max-w-xl w-full mx-auto text-center pop">
+            <div className="mb-8 float text-6xl">🎂</div>
+            <h1 className="text-5xl font-bold text-white mb-6">Olá, {studentName}! Qual a sua faixa etária?</h1>
+            <p className="text-white/80 mb-8 text-lg">Isso ajuda o Bruno a personalizar sua jornada!</p>
+            <div className="grid grid-cols-1 gap-4">
+              <button onClick={() => handleAgeSubmit('6-8')} className="bg-green-400 hover:bg-green-500 text-white font-bold text-2xl px-12 py-6 rounded-2xl shadow-2xl transform hover:scale-105 transition-all">6 a 8 anos</button>
+              <button onClick={() => handleAgeSubmit('9-12')} className="bg-blue-400 hover:bg-blue-500 text-white font-bold text-2xl px-12 py-6 rounded-2xl shadow-2xl transform hover:scale-105 transition-all">9 a 12 anos</button>
+              <button onClick={() => handleAgeSubmit('13+')} className="bg-purple-400 hover:bg-purple-500 text-white font-bold text-2xl px-12 py-6 rounded-2xl shadow-2xl transform hover:scale-105 transition-all">13+ anos</button>
+            </div>
+          </div>
+        </div>
+      );
+
+      const WelcomeScreen = () => (
+        <div className="min-h-screen flex items-center justify-center p-6">
+          <div className="max-w-2xl mx-auto text-center pop">
+            <div className="mb-8 float text-6xl">✨</div>
+            <h1 className="text-6xl font-bold text-white mb-6 pulse">Laboratório dos Números</h1>
+            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 mb-8 border-2 border-white/20">
+              <p className="text-2xl text-white mb-4">Bem-vindo(a), <span className="font-bold text-yellow-300">{studentName}</span>!</p>
+              <p className="text-xl text-white/90 mb-2">Aqui, cada desafio é um degrau da sabedoria matemática.</p>
+              <p className="text-lg text-white/80">Vamos começar nossa missão? 🚀</p>
+            </div>
+            <button onClick={() => { startClick(); setCurrentScreen('diagnostic'); setCurrentQuestion(0); setDiagnosticAnswers([]); }}
+              className="bg-yellow-400 hover:bg-yellow-500 text-purple-900 font-bold text-2xl px-12 py-6 rounded-2xl shadow-2xl transform hover:scale-105 transition-all">
+              Iniciar Diagnóstico ✨
+            </button>
+          </div>
+        </div>
+      );
+
+      const DiagnosticScreen = () => {
+        const currentDiagQ = diagnosticQuestions[currentQuestion];
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6 flex items-center justify-center">
+            <div className="max-w-3xl w-full mx-auto">
+              <div className="bg-white rounded-3xl shadow-2xl p-8 mb-6 pop">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-3xl font-bold text-gray-800">Teste de Diagnóstico</h2>
+                  <span className="text-lg text-gray-600">Questão {currentQuestion + 1} de {diagnosticQuestions.length}</span>
+                </div>
+                <div className="bg-purple-50 p-6 rounded-2xl mb-6">
+                  <p className="text-2xl text-gray-800 mb-6">{currentDiagQ.question}</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    {currentDiagQ.options.map((opt, idx) => (
+                      <button key={idx} onClick={() => { clickSound(); handleDiagnosticAnswer(idx); }}
+                        className="bg-white hover:bg-purple-100 border-2 border-purple-200 p-4 rounded-xl text-lg font-medium transition-all hover:scale-105">
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const DiagnosticResultScreen = () => {
+        const correctCount = diagnosticAnswers.filter(a => a.correct).length;
+        const percentage = (correctCount / diagnosticQuestions.length) * 100;
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6 flex items-center justify-center">
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-3xl shadow-2xl p-8 text-center pop">
+                <div className="text-6xl mb-6">🏆</div>
+                <h2 className="text-4xl font-bold text-gray-800 mb-4">Diagnóstico Completo!</h2>
+                <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-6 rounded-2xl mb-6">
+                  <p className="text-6xl font-bold text-purple-600 mb-2">{percentage.toFixed(0)}%</p>
+                  <p className="text-xl text-gray-700">Você acertou {correctCount} de {diagnosticQuestions.length} questões</p>
+                </div>
+                <button onClick={() => { startClick(); setCurrentScreen('planets'); }}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xl px-10 py-4 rounded-xl shadow-lg hover:scale-105 transition-all">
+                  Explorar os Planetas Matemáticos 🚀
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const PlanetsScreen = () => (
+        <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20 pop">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-3xl font-bold text-white mb-2">Meu Progresso, {studentName}</h2>
+                  <p className="text-white/80">Continue explorando os planetas matemáticos!</p>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-yellow-300 text-2xl">⭐</span>
+                    <span className="text-3xl font-bold text-yellow-300">{totalStars}</span>
+                  </div>
+                  <p className="text-white/80 text-sm">Estrelas conquistadas</p>
+                </div>
+              </div>
+              <div className="mt-4 bg-white/20 rounded-full h-3">
+                <div className="bg-yellow-400 h-full rounded-full transition-all" style={{ width: `${(completedPlanets.length / planets.length) * 100}%` }}></div>
+              </div>
+              <div className="mt-6 bg-black/20 border border-white/20 rounded-2xl p-4">
+                <div className="flex flex-col md:flex-row md:items-end gap-4">
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-white/70 mb-1">Chave de API da IA Gemini</label>
+                    <input
+                      type="password"
+                      inputMode="text"
+                      value={apiKey}
+                      onChange={(event) => handleApiKeyChange(event.target.value)}
+                      placeholder="Cole sua chave que começa com AIza..."
+                      className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleTestApiKey}
+                      className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:scale-105 transition-all"
+                    >
+                      Testar chave
+                    </button>
+                    <button
+                      onClick={handleResetApiKey}
+                      className="bg-white/10 text-white font-semibold px-4 py-3 rounded-xl border border-white/20 hover:bg-white/20 transition-all"
+                    >
+                      Usar padrão
+                    </button>
+                  </div>
+                </div>
+                {apiKeyStatus && (
+                  <p
+                    className={`mt-3 text-sm ${
+                      apiKeyStatus.state === 'success'
+                        ? 'text-green-200'
+                        : apiKeyStatus.state === 'error'
+                        ? 'text-rose-200'
+                        : apiKeyStatus.state === 'testing'
+                        ? 'text-amber-200 animate-pulse'
+                        : 'text-sky-200'
+                    }`}
+                  >
+                    {apiKeyStatus.state === 'testing' ? 'Testando chave...' : apiKeyStatus.message}
+                  </p>
+                )}
+              </div>
+              {(completedPlanets.includes('fracoes') || totalStars > 0) && (
+                <div className="mt-4 bg-white/10 rounded-xl p-4">
+                  <p className="text-white/90 mb-2 text-sm">Domínio de Frações</p>
+                  <MasteryChart mastery={skillMastery} />
+                </div>
+              )}
+            </div>
+
+            <div className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20 pop">
+              <p className="text-xl text-white italic">
+                💬 "{isMentorLoading ? 'Bruno está digitando...' : mentorMessage}"
+                <span className="block mt-2 text-right text-sm">— Bruno Mayson, seu mentor</span>
+              </p>
+            </div>
+
+            {intelligentAgenda.length > 0 && (
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20 pop">
+                <h3 className="text-white text-xl font-semibold mb-2">Central de Insights do Bruno</h3>
+                <ul className="space-y-2">
+                  {intelligentAgenda.map((entry, index) => (
+                    <li key={index} className="bg-white/10 text-white text-sm px-4 py-2 rounded-xl flex items-center gap-2">
+                      <span className="text-lg">🧠</span>
+                      <span>{entry.message}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {planets.map((p, index) => {
+                const isCompleted = completedPlanets.includes(p.id);
+                const prevPlanet = planets[index - 1];
+                const isLocked = p.id !== 'chat' && prevPlanet && !completedPlanets.includes(prevPlanet.id);
+                return (
+                  <div key={p.id} className={`bg-white/10 backdrop-blur-lg rounded-3xl p-8 border-2 ${isCompleted ? 'border-yellow-400' : 'border-white/20'} ${isLocked ? 'opacity-50' : 'hover:scale-105'} transition-all pop`}>
+                    <div className="text-center">
+                      <div className="text-7xl mb-4">{p.emoji}</div>
+                      <h3 className="text-2xl font-bold text-white mb-2">{p.name}</h3>
+                      {isCompleted && (
+                        <div className="flex items-center justify-center gap-2 mb-4 text-yellow-300">
+                          <span>✅</span><span className="font-semibold">Planeta Conquistado!</span>
+                        </div>
+                      )}
+                      {isLocked ? (
+                        <p className="text-white/60 mb-4">🔒 Complete o planeta anterior</p>
+                      ) : (
+                        <button onClick={() => startModule(p.id)}
+                          className={`bg-gradient-to-r ${p.color} text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:scale-105 transition-all mt-4`}>
+                          {p.id === 'chat' ? 'Conversar 💬' : (isCompleted ? 'Revisar Planeta 🚀' : 'Explorar Planeta 🚀')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+
+      const FractionManipulative = () => {
+        const [parts, setParts] = useState(4);
+        const [colored, setColored] = useState(1);
+        useEffect(() => { setColored(c => Math.min(c, parts)); }, [parts]);
+        return (
+          <div className="mt-6 bg-orange-50 p-4 rounded-xl">
+            <p className="font-semibold mb-2">Brinque com a pizza: escolha as partes e quantas colorir</p>
+            <div className="flex flex-wrap gap-4 mb-3 items-center">
+              <label className="flex items-center gap-2">Partes:
+                <input type="range" min="2" max="12" value={parts} onChange={(e) => setParts(+e.target.value)} />
+                <span className="ml-1 font-mono">{parts}</span>
+              </label>
+              <label className="flex items-center gap-2">Coloridas:
+                <input type="range" min="0" max={parts} value={colored} onChange={(e) => setColored(+e.target.value)} />
+                <span className="ml-1 font-mono">{colored}</span>
+              </label>
+            </div>
+            <p className="text-lg">
+              Fração formada: <strong>{colored}/{parts}</strong>
+              <span className="text-sm text-gray-600"> — (numerador = partes pintadas; denominador = partes totais)</span>
+            </p>
+          </div>
+        );
+      };
+
+
+      const LessonScreen = () => {
+        const lesson = moduleLessons[currentModule];
+        if (!lesson) return null;
+        const profile = useContext(BrunoProfileContext);
+        const curiosities = moduleCuriosities[currentModule] || [];
+        const missions = moduleMissions[currentModule] || [];
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6 flex items-center justify-center">
+            <div className="max-w-4xl w-full mx-auto space-y-6">
+              <div className="bg-white rounded-2xl shadow-lg p-6 pop">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-5xl">{planets.find(p => p.id === currentModule)?.emoji}</span>
+                    <div>
+                      <h2 className="text-3xl font-bold text-gray-800">{lesson.title}</h2>
+                      <p className="text-gray-600">Vamos aprender juntos antes de praticar!</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setCurrentScreen('planets')} className="text-gray-500 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                  </button>
+                </div>
+              </div>
+              <div className="bg-white rounded-3xl shadow-2xl p-8 pop">
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-bold text-purple-600">{lesson.steps[currentStep].title}</h3>
+                    <span className="text-sm text-gray-600">Passo {currentStep + 1} de {lesson.steps.length}</span>
+                  </div>
+                  <div className="bg-purple-50 p-6 rounded-2xl mb-6">
+                    <div className="text-center mb-4"><span className="text-6xl">{lesson.steps[currentStep].visual}</span></div>
+                    <div className="text-xl text-gray-800 mb-4 text-center font-medium flex items-center justify-center gap-2">
+                      {lesson.steps[currentStep].content}
+                      <ReadAloudButton text={lesson.steps[currentStep].content + ' Exemplo: ' + (lesson.steps[currentStep].example || '')} />
+                    </div>
+                  </div>
+                  <div className="bg-gradient-to-r from-blue-50 to-green-50 border-2 border-blue-200 p-6 rounded-2xl">
+                    <p className="text-sm font-semibold text-blue-700 mb-2">💡 Exemplo Prático:</p>
+                    <p className="text-lg text-gray-700">{lesson.steps[currentStep].example}</p>
+                  </div>
+                  {currentModule === "fracoes" && <FractionManipulative />}
+                </div>
+                <div className="flex gap-4 justify-between">
+                  <button onClick={() => { clickSound(); setCurrentStep(s => Math.max(0, s - 1)); }}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-xl transition-all disabled:opacity-50" disabled={currentStep === 0}>← Anterior</button>
+                  {currentStep < lesson.steps.length - 1 ? (
+                    <button onClick={() => { clickSound(); setCurrentStep(s => s + 1); }}
+                      className="ml-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold px-8 py-3 rounded-xl hover:scale-105 transition-all">Próximo →</button>
+                  ) : (
+                    <button onClick={() => { clickSound(); startExercises(); }}
+                      className="ml-auto bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold px-10 py-4 rounded-xl hover:scale-105 transition-all text-lg">Pronto! Vamos Praticar! 🚀</button>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-center gap-2">
+                {lesson.steps.map((_, idx) => (
+                  <div key={idx} className={`h-2 rounded-full transition-all ${idx === currentStep ? 'w-8 bg-purple-600' : 'w-2 bg-gray-300'}`} />
+                ))}
+              </div>
+              {curiosities.length > 0 && (
+                <div className="bg-white rounded-3xl shadow-2xl p-6 pop">
+                  <h4 className="text-purple-700 font-bold text-xl mb-3">{profile.curiosityLabel}</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {curiosities.map((item, idx) => (
+                      <div key={idx} className="bg-purple-50 border border-purple-200 rounded-2xl p-4">
+                        <h5 className="text-lg font-semibold text-purple-700 mb-1">{item.title}</h5>
+                        <p className="text-sm text-purple-800 leading-relaxed">{item.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {missions.length > 0 && (
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-3xl p-6 pop">
+                  <h4 className="text-indigo-700 font-bold text-xl mb-2">{profile.missionLabel}</h4>
+                  <p className="text-sm text-indigo-600 mb-3">{profile.missionIntro}</p>
+                  <ul className="space-y-2 text-gray-700">
+                    {missions.map((mission, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <span className="text-indigo-500 font-semibold">{idx + 1}.</span>
+                        <span>{mission}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      };
+
+      const LearningScreen = () => {
+        const questions = moduleQuestions[currentModule]?.[difficulty] || [];
+        const planet = planets.find(p => p.id === currentModule);
+
+        if (!processedQ) {
+          return (
+            <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-purple-50 to-pink-50">
+              <div className="bg-white rounded-3xl shadow-2xl p-8 text-center max-w-xl pop">
+                <p className="text-2xl mb-4">Você concluiu as questões disponíveis. Preparando para finalizar...</p>
+                <button onClick={() => { clickSound(); finishModule(); }} className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xl py-4 rounded-xl hover:scale-105 transition-all">Finalizar Módulo</button>
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-6 flex items-center justify-center">
+            <div className="max-w-4xl w-full mx-auto">
+              <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 pop">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">{planet?.emoji}</span>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-800">{planet?.name}</h2>
+                      <p className="text-sm text-gray-600">Nível: {difficulty === 'easy' ? 'Iniciante' : difficulty === 'medium' ? 'Intermediário' : 'Avançado'}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600">
+                      {processedQ.skill === 'gemini-practice' ? <span className="font-bold text-purple-600">✨ Desafio do Bruno!</span> : remedialQueue.length ? <span className="font-bold text-purple-600">Reforço!</span> : `Questão ${currentQuestion + 1}/${questions.length}`}
+                    </p>
+                    <p className="text-lg font-bold text-purple-600">Pontos: {score}</p>
+                  </div>
+                  <button onClick={() => setCurrentScreen('planets')} className="text-gray-500 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl shadow-2xl p-8 mb-6 pop">
+                <p className="text-2xl text-gray-800 mb-6">{processedQ.question}</p>
+                {processedQ.visual && (
+                  <div className="bg-purple-50 p-4 rounded-2xl mb-6 text-center">
+                    <p className="text-lg text-gray-700">{processedQ.visual}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  {processedQ.options.map((opt, idx) => (
+                    <button key={idx} onClick={() => handleAnswer(idx)} disabled={!!feedback} className="bg-gradient-to-r from-purple-100 to-pink-100 hover:from-purple-200 hover:to-pink-200 border-2 border-purple-300 p-6 rounded-2xl text-xl font-medium transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100">{opt}</button>
+                  ))}
+                </div>
+
+                {!feedback && (
+                  <div className="text-center mt-6">
+                    <button onClick={handleGetHint} disabled={isHintLoading || !!geminiHint} className="bg-amber-100 text-amber-800 font-semibold px-4 py-2 rounded-lg hover:bg-amber-200 transition-all disabled:opacity-50">{isHintLoading ? 'Pensando...' : '💡 Pedir uma Dica do Bruno'}</button>
+                  </div>
+                )}
+
+                {geminiHint && !feedback && (
+                  <div className="mt-4 bg-amber-50 p-4 rounded-xl border border-amber-200">
+                    <p className="text-amber-900 text-center"><span className="font-bold">Dica do Bruno:</span> {geminiHint}</p>
+                  </div>
+                )}
+              </div>
+
+              {aiGeneratedQuestion && (
+                <div className="bg-white rounded-3xl shadow-2xl p-6 mb-6 border border-teal-200 pop">
+                  <h4 className="text-teal-700 font-bold mb-2">Questão Inteligente em Fila:</h4>
+                  <p className="text-gray-700">{aiGeneratedQuestion.question}</p>
+                </div>
+              )}
+
+              {feedback && (
+                <div className={`bg-white rounded-3xl shadow-2xl p-8 border-4 ${feedback.type === 'success' ? 'border-green-400' : 'border-orange-400'} pop`}>
+                  <div className="text-center mb-4">
+                    <div className="text-5xl mb-2">{feedback.type === 'success' ? '✅' : '🧩'}</div>
+                    <h3 className="text-3xl font-bold mb-2">{feedback.message}</h3>
+                  </div>
+                  <div className="bg-blue-50 p-6 rounded-2xl mb-4">
+                    <p className="text-lg text-gray-800 flex items-center justify-center gap-2">{feedback.explanation} <ReadAloudButton text={feedback.explanation} /></p>
+                  </div>
+                  {feedback.encouragement && <div className="bg-purple-50 p-4 rounded-xl mb-4"><p className="text-center text-purple-700 italic">{feedback.encouragement}</p></div>}
+                  {isGeminiLoading && <div className="text-center my-2 text-purple-600 animate-pulse">Aguarde, o Bruno está trabalhando...</div>}
+                  {geminiContent?.type === 'explanation' && (
+                    <div className="mt-4 bg-purple-50 p-4 rounded-xl border border-purple-200">
+                      <h4 className="font-bold text-purple-700">✨ Uma nova explicação do Bruno:</h4>
+                      <MarkdownRenderer text={geminiContent.text} />
+                    </div>
+                  )}
+                  {geminiContent?.type === 'error' && (
+                    <div className="mt-4 bg-red-50 p-4 rounded-xl border border-red-200">
+                      <p className="text-red-700 font-semibold text-center">{geminiContent.text}</p>
+                    </div>
+                  )}
+                  <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                    {feedback.type === 'success' && (
+                      <button onClick={() => handleGetSimilarProblem(false)} disabled={isGeminiLoading} className="flex-1 w-full bg-gradient-to-r from-teal-400 to-cyan-500 text-white font-bold text-lg py-3 px-4 rounded-xl hover:scale-105 transition-all disabled:opacity-60 disabled:hover:scale-100">{isGeminiLoading ? 'Criando...' : '✨ Crie um problema parecido'}</button>
+                    )}
+                    {feedback.type === 'error' && (
+                      <button onClick={handleGetExplanation} disabled={isGeminiLoading} className="flex-1 w-full bg-gradient-to-r from-orange-400 to-amber-500 text-white font-bold text-lg py-3 px-4 rounded-xl hover:scale-105 transition-all disabled:opacity-60 disabled:hover:scale-100">{isGeminiLoading ? 'Pensando...' : '✨ Me explique de outro jeito'}</button>
+                    )}
+                    <button onClick={nextQuestion} disabled={isGeminiLoading} className="flex-1 w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-lg py-3 px-4 rounded-xl hover:scale-105 transition-all disabled:opacity-60 disabled:hover:scale-100">Próximo Desafio <span className="inline-block ml-2 transform">➡️</span></button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      };
+
+      const ModuleCompleteScreen = () => {
+        const answered = Math.max(answeredInModule, 1);
+        const finalScore = ((score / answered) * 10).toFixed(1);
+        const stars = Math.round(parseFloat(finalScore) / 2);
+        const planet = planets.find(p => p.id === currentModule);
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-pink-50 p-6 flex items-center justify-center">
+            <div className="max-w-2xl mx-auto text-center pop">
+              <div className="text-7xl mb-6">🏆</div>
+              <h2 className="text-5xl font-bold text-gray-800 mb-4">{parseFloat(finalScore) >= 8 ? "Planeta Conquistado!" : "Módulo Finalizado!"}</h2>
+              <div className="bg-white rounded-3xl shadow-2xl p-8 mb-6">
+                <div className="text-6xl mb-4">{planet?.emoji}</div>
+                <h3 className="text-3xl font-bold text-purple-600 mb-6">{planet?.name}</h3>
+                <div className="bg-gradient-to-r from-yellow-100 to-orange-100 p-6 rounded-2xl mb-6">
+                  <p className="text-7xl font-bold text-orange-600 mb-2">{finalScore}</p>
+                  <div className="flex justify-center gap-2 mb-4">
+                    {Array.from({ length: 5 }).map((_, i) => (<span key={i} className={`text-3xl ${i < stars ? '' : 'opacity-30'}`}>⭐</span>))}
+                  </div>
+                  <p className="text-xl text-gray-700 font-semibold">{parseFloat(finalScore) >= 9 ? "🌟 Excelente raciocínio!" : parseFloat(finalScore) >= 8 ? "⭐ Muito bem!" : "💪 Continue praticando! Você está no caminho certo."}</p>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-xl mb-6"><p className="text-lg text-purple-700">Você acertou {score} de {answered} questões!</p></div>
+                {parseFloat(finalScore) >= 8 && <div className="bg-green-50 border-2 border-green-300 p-4 rounded-xl mb-4"><p className="text-green-700 font-semibold">✅ Novo planeta desbloqueado!</p></div>}
+              </div>
+              <button onClick={() => { startClick(); setCurrentScreen('planets'); }} className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-2xl px-12 py-5 rounded-2xl shadow-2xl hover:scale-105 transition-all">Explorar Mais Planetas 🚀</button>
+            </div>
+          </div>
+        );
+      };
+
+      const renderScreen = () => {
+        switch (currentScreen) {
+          case 'name-entry': return <NameEntryScreen initialName={studentName} onSubmit={handleNameSubmit} />;
+          case 'age-gate': return <AgeGateScreen />;
+          case 'welcome': return <WelcomeScreen />;
+          case 'diagnostic': return <DiagnosticScreen />;
+          case 'diagnostic-result': return <DiagnosticResultScreen />;
+          case 'planets': return <PlanetsScreen />;
+          case 'lesson': return <LessonScreen />;
+          case 'learning': return <LearningScreen />;
+          case 'module-complete': return <ModuleCompleteScreen />;
+          case 'chat':
+            return (
+              <ChatView
+                chatHistory={chatHistory}
+                isChatLoading={isChatLoading}
+                onBack={handleChatBack}
+                onSend={handleSendChatMessage}
+              />
+            );
+          default: return null;
+        }
+      };
+
+      return (
+        <BrunoProfileContext.Provider value={profile}>
+          <div>{renderScreen()}</div>
+        </BrunoProfileContext.Provider>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('app'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

@@ -27,7 +27,96 @@
   <div id="app"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useRef, useMemo, useCallback } = React;
+    const { useState, useEffect, useRef, useMemo, useCallback, useContext } = React;
+
+    const AGE_PROFILES = {
+      '6-8': {
+        tone: 'lúdico, cheio de imaginação e com comparações simples do cotidiano infantil',
+        encouragementCue: 'Use elogios calorosos, convide o aluno a contar como pensou e celebre com emojis alegres.',
+        chatGuidance: 'Faça perguntas curtas, ofereça metáforas com brinquedos e proponha desafios brincando de faz de conta.',
+        curiosityLabel: 'Curiosidades Coloridas do Universo Bruno',
+        missionLabel: 'Missões brincadeiras para experimentar depois',
+        missionIntro: 'Escolha uma missão divertida para colocar em prática quando terminar a aula:',
+        speech: { rate: 1.05, pitch: 1.18 },
+        preferredModel: 'gemini-1.5-flash',
+        storyHook: 'Traga personagens amigáveis, comidas saborosas e brincadeiras cooperativas.',
+        mentorCue: 'Mostre orgulho do esforço, lembre que errar é parte da descoberta e sugira uma brincadeira para revisar.',
+      },
+      '9-12': {
+        tone: 'encorajador, curioso e com desafios investigativos que despertam autonomia',
+        encouragementCue: 'Reforce o raciocínio usado, destaque estratégias e convide o aluno a explicar o próximo passo.',
+        chatGuidance: 'Estimule perguntas “e se...?”, proponha mini missões investigativas e conecte com situações reais do dia a dia.',
+        curiosityLabel: 'Insights rápidos para mentes investigadoras',
+        missionLabel: 'Desafios para explorar depois da aula',
+        missionIntro: 'Quando terminar, escolha um destes desafios rápidos para testar seu conhecimento:',
+        speech: { rate: 1, pitch: 1.08 },
+        preferredModel: 'gemini-1.5-flash',
+        storyHook: 'Conecte a situações de escola, esportes e tecnologia que exijam estratégia.',
+        mentorCue: 'Valorize a independência, convide o aluno a ensinar alguém e sugira aplicar o conceito em casa.',
+      },
+      '13+': {
+        tone: 'maduro, parceiro de estudo e focado em aplicações reais e metas pessoais',
+        encouragementCue: 'Reconheça a análise crítica, proponha aprofundamentos e destaque conexões com o mundo real.',
+        chatGuidance: 'Trabalhe com perguntas abertas, incentive reflexões sobre carreira e convide para autoavaliações objetivas.',
+        curiosityLabel: 'Contextos avançados para conectar teoria e prática',
+        missionLabel: 'Missões estratégicas para consolidar o aprendizado',
+        missionIntro: 'Selecione uma missão para transformar o conteúdo em ação concreta:',
+        speech: { rate: 0.94, pitch: 1 },
+        preferredModel: 'gemini-1.5-flash',
+        storyHook: 'Construa cenários ligados a projetos, finanças pessoais e desafios acadêmicos.',
+        mentorCue: 'Estimule metas de longo prazo, cite aplicações profissionais e indique próximos passos de aprofundamento.',
+      },
+      default: {
+        tone: 'acolhedor, claro e empolgante',
+        encouragementCue: 'Elogie o esforço e convide o aluno a experimentar novas estratégias.',
+        chatGuidance: 'Mantenha a conversa calorosa e adaptável ao ritmo do aluno.',
+        curiosityLabel: 'Curiosidades do Laboratório',
+        missionLabel: 'Missões para continuar praticando',
+        missionIntro: 'Separei algumas missões extras para você experimentar quando quiser:',
+        speech: { rate: 1, pitch: 1.05 },
+        preferredModel: 'gemini-1.5-flash',
+        storyHook: 'Use exemplos cotidianos e metáforas amigáveis.',
+        mentorCue: 'Celebre progresso e indique um próximo passo prático.',
+      },
+    };
+
+    const BrunoProfileContext = React.createContext(AGE_PROFILES.default);
+
+    const voiceRegistry = { voice: null };
+
+    const pickBrunoVoice = (voices = []) => {
+      if (!voices.length) return null;
+      const priority = voices.find(v => /br(?:-|\s)?pt|portuguese \(brazil\)/i.test(`${v.name} ${v.lang}`));
+      return priority || voices.find(v => v.lang?.toLowerCase().startsWith('pt')) || voices[0];
+    };
+
+    const useBrunoVoice = () => {
+      const [voice, setVoice] = useState(() => {
+        if (typeof window === 'undefined' || !window.speechSynthesis) return null;
+        const available = window.speechSynthesis.getVoices();
+        const chosen = voiceRegistry.voice || pickBrunoVoice(available);
+        if (chosen) voiceRegistry.voice = chosen;
+        return chosen || null;
+      });
+
+      useEffect(() => {
+        if (typeof window === 'undefined' || !window.speechSynthesis) return;
+        const handleVoices = () => {
+          const available = window.speechSynthesis.getVoices();
+          if (!available.length) return;
+          const chosen = pickBrunoVoice(available);
+          if (chosen && chosen !== voiceRegistry.voice) {
+            voiceRegistry.voice = chosen;
+            setVoice(chosen);
+          }
+        };
+        handleVoices();
+        window.speechSynthesis.addEventListener('voiceschanged', handleVoices);
+        return () => window.speechSynthesis.removeEventListener('voiceschanged', handleVoices);
+      }, []);
+
+      return voice;
+    };
 
     const audioBank = {
       ok: "data:audio/wav;base64,UklGRlgEAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABgAZGF0YQQEAACAgP/9/v38/PX36fLp9Ofz6fXr9vH59Pr6/QD+/f/9AAUAGgA9AFIAcwCPAKcAtgDJAOEA7AECAU4BpAGyAOsBFgGBAcwB9QIZApYDxwH/AiMClQPSAfsCLgKyA+kCAwMIAesB5wHYAREAxgHjAYIBjwCxAP0A7wDeAPQA7gD8AP8A/gD9APMA6gDBALEAowCLAJYAkgCRAJEAlQCiAKgArACxALUAvgDFAMsA2wDpAP8BAwINAhwCLgA9ADUAJgAgAB0AHAAcABwAHgAgACIAJgAoACoALAAvADIANQA4ADsAPgBCAEUASAA=",
@@ -61,15 +150,23 @@
 
     function ReadAloudButton({ text }) {
       const clickSound = useSound('click');
+      const profile = useContext(BrunoProfileContext);
+      const voice = useBrunoVoice();
       const canSpeak = typeof window !== "undefined" && "speechSynthesis" in window;
+
       const speak = useCallback(() => {
         if (!canSpeak) return;
         const sanitized = String(text || "").replace(/[\s\n]+/g, " ");
         const utterance = new SpeechSynthesisUtterance(sanitized);
         utterance.lang = "pt-BR";
+        if (voice) utterance.voice = voice;
+        if (profile?.speech) {
+          utterance.rate = profile.speech.rate;
+          utterance.pitch = profile.speech.pitch;
+        }
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(utterance);
-      }, [canSpeak, text]);
+      }, [canSpeak, text, voice, profile]);
 
       return (
         <button
@@ -154,6 +251,57 @@
           { title: "Nível 5: A Corrida dos Ratos", content: "É um ciclo onde as pessoas trabalham para ganhar dinheiro, pagam contas e ficam sem nada, precisando trabalhar mais. Nosso objetivo é sair dessa corrida!", visual: "🐹🎡", example: "Ganhar R$100 e gastar R$100 em contas e desejos todo mês é estar na corrida dos ratos. O segredo é fazer sobrar e comprar ativos." },
         ]
       }
+    };
+
+    const moduleCuriosities = {
+      fracoes: [
+        { title: 'Frações no espaço', detail: 'Astronautas dividem o oxigênio e a água da nave em frações para cada membro da equipe. Se a missão dura 6 dias e há 12 litros de água, cada pessoa recebe 1/6 do total por dia.' },
+        { title: 'Música fracionada', detail: 'As notas musicais usam frações: uma semínima vale 1/4 de um compasso 4/4. É por isso que batemos palma quatro vezes na mesma batida!' },
+      ],
+      decimais: [
+        { title: 'Precisão nos esportes', detail: 'Juízes olímpicos registram tempos como 9,58 segundos. Os decimais mostram cada centésimo de segundo que decide o vencedor.' },
+        { title: 'Tecnologia e sensores', detail: 'Sensores de temperatura enviam leituras decimais, como 36,7 °C, para que médicos e engenheiros façam ajustes finos em tempo real.' },
+      ],
+      operacoes: [
+        { title: 'Robôs calculistas', detail: 'Robôs industriais executam milhares de adições e multiplicações por segundo para posicionar peças com precisão milimétrica.' },
+        { title: 'Games e física', detail: 'Motores de jogos usam operações para calcular saltos, velocidade e colisões em cada quadro da animação.' },
+      ],
+      logica: [
+        { title: 'Detetives digitais', detail: 'Analistas de dados usam lógica para descobrir padrões escondidos em milhões de informações e prever tendências.' },
+        { title: 'Programação estratégica', detail: 'Algoritmos de busca e recomendação seguem passos lógicos que você também aprende ao resolver enigmas sequenciais.' },
+      ],
+      financas: [
+        { title: 'Juros que não dormem', detail: 'Investimentos rendem mesmo enquanto você está dormindo. Juros compostos multiplicam o dinheiro a cada período.' },
+        { title: 'Planejamento familiar', detail: 'Famílias usam planilhas com percentuais para decidir quanto poupar, gastar e doar a cada mês.' },
+      ],
+    };
+
+    const moduleMissions = {
+      fracoes: [
+        'Observe o lanche do dia e anote que fração dele você comeu. Desenhe no caderno.',
+        'Crie uma pizza de papelão dividida em 8 partes. Pinte sabores diferentes e monte combinações.',
+        'Durante uma conversa com alguém da família, pergunte que fração do tempo livre eles dedicam a cada hobby.',
+      ],
+      decimais: [
+        'Compare os preços de três produtos no mercado e anote os valores com duas casas decimais.',
+        'Meça sua altura e a de alguém da família em metros com decimais. Calcule a diferença.',
+        'Faça uma receita simples e registre as quantidades em litros ou quilogramas usando decimais.',
+      ],
+      operacoes: [
+        'Planeje uma festa imaginária somando a quantidade de convidados e itens necessários.',
+        'Crie um placar de campeonato e calcule a pontuação total das equipes ao final de três rodadas.',
+        'Divida 120 minutos de estudo em blocos equilibrados para cada matéria e registre as contas.',
+      ],
+      logica: [
+        'Monte uma tabela de “se… então…” para um problema cotidiano, como escolher transporte em dias de chuva.',
+        'Crie uma sequência própria (por exemplo, 3, 6, 9, ?) e peça para alguém descobrir a regra.',
+        'Escreva um enigma com pistas lógicas que leve um amigo a descobrir um objeto escondido.',
+      ],
+      financas: [
+        'Organize um orçamento fictício de R$100 dividindo em guardar, investir e gastar conscientemente.',
+        'Pesquise quanto custa um sonho (curso, viagem, objeto) e calcule em quanto tempo juntaria o valor poupando toda semana.',
+        'Converse com alguém sobre um ativo e um passivo da casa e anote a diferença em suas palavras.',
+      ],
     };
 
     const moduleQuestions = {
@@ -308,8 +456,29 @@
       }
     }
 
-    function MarkdownRenderer({ text }) {
+    const MarkdownRenderer = React.memo(function MarkdownRenderer({ text }) {
       const contentRef = useRef(null);
+
+      const blocks = useMemo(() => {
+        if (!text) return [];
+        return text.split(/\n+/)
+          .map(line => line.trim())
+          .filter(Boolean)
+          .map(line => {
+            if (line === '---') return { type: 'divider' };
+            if (line.startsWith('## ')) return { type: 'h2', value: line.substring(3) };
+            if (line.startsWith('### ')) return { type: 'h3', value: line.substring(4) };
+            const parts = line
+              .split(/(\*\*.*?\*\*|\$.*?\$|\$\$.*?\$\$)/g)
+              .filter(Boolean)
+              .map(segment => {
+                if (segment.startsWith('**') && segment.endsWith('**')) return { type: 'strong', value: segment.slice(2, -2) };
+                if (segment.startsWith('$')) return { type: 'math', value: segment };
+                return { type: 'text', value: segment };
+              });
+            return { type: 'paragraph', parts };
+          });
+      }, [text]);
 
       useEffect(() => {
         if (contentRef.current && window.renderMathInElement) {
@@ -320,31 +489,29 @@
             ],
           });
         }
-      }, [text]);
+      }, [blocks]);
 
       if (!text) return null;
-      const paragraphs = text.split(/\n+/);
 
       return (
         <div ref={contentRef}>
-          {paragraphs.map((paragraph, index) => {
-            const line = paragraph.trim();
-            if (!line) return null;
-            if (line.startsWith('## ')) return <h2 key={index} className="text-xl font-bold mt-4 mb-2">{line.substring(3)}</h2>;
-            if (line.startsWith('### ')) return <h3 key={index} className="text-lg font-bold mt-3 mb-1">{line.substring(4)}</h3>;
-            if (line === '---') return <hr key={index} className="my-4 border-purple-200" />;
-
-            const parts = line.split(/(\*\*.*?\*\*|\$.*?\$|\$\$.*?\$\$)/g).filter(Boolean);
-            const rendered = parts.map((part, i) => {
-              if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>;
-              if (part.startsWith('$')) return <span key={i}>{part}</span>;
-              return part;
-            });
-            return <p key={index} className="my-2">{rendered}</p>;
+          {blocks.map((block, index) => {
+            if (block.type === 'divider') return <hr key={index} className="my-4 border-purple-200" />;
+            if (block.type === 'h2') return <h2 key={index} className="text-xl font-bold mt-4 mb-2">{block.value}</h2>;
+            if (block.type === 'h3') return <h3 key={index} className="text-lg font-bold mt-3 mb-1">{block.value}</h3>;
+            return (
+              <p key={index} className="my-2">
+                {block.parts.map((part, i) => {
+                  if (part.type === 'strong') return <strong key={i}>{part.value}</strong>;
+                  if (part.type === 'math') return <span key={i}>{part.value}</span>;
+                  return <span key={i}>{part.value}</span>;
+                })}
+              </p>
+            );
           })}
         </div>
       );
-    }
+    });
 
     const NameEntryScreen = React.memo(function NameEntryScreen({ initialName = "", onSubmit }) {
       const [localName, setLocalName] = useState(initialName);
@@ -397,6 +564,17 @@
       );
     });
 
+    const ChatMessage = React.memo(function ChatMessage({ message }) {
+      const isUser = message.role === 'user';
+      return (
+        <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+          <div className={`max-w-lg p-3 rounded-2xl ${isUser ? 'bg-blue-500 text-white' : 'bg-white shadow'}`}>
+            <MarkdownRenderer text={message.parts?.[0]?.text || ''} />
+          </div>
+        </div>
+      );
+    });
+
     const ChatView = React.memo(function ChatView({ chatHistory, isChatLoading, onBack, onSend }) {
       const [inputValue, setInputValue] = useState("");
       const chatEndRef = useRef(null);
@@ -439,11 +617,7 @@
           </header>
           <main className="flex-1 overflow-y-auto p-4 space-y-4">
             {chatHistory.map((msg, index) => (
-              <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-lg p-3 rounded-2xl ${msg.role === 'user' ? 'bg-blue-500 text-white' : 'bg-white shadow'}`}>
-                  <MarkdownRenderer text={msg.parts?.[0]?.text || ''} />
-                </div>
-              </div>
+              <ChatMessage key={index} message={msg} />
             ))}
             {isChatLoading && (
               <div className="flex justify-start">
@@ -513,6 +687,8 @@
       const [intelligentAgenda, setIntelligentAgenda] = useState([]);
       const abortControllers = useRef(new Set());
 
+      const profile = useMemo(() => AGE_PROFILES[studentAge] || AGE_PROFILES.default, [studentAge]);
+
       useEffect(() => () => {
         abortControllers.current.forEach(ctrl => ctrl.abort());
         abortControllers.current.clear();
@@ -529,8 +705,9 @@
       }, [processedQ, currentModule]);
 
       const callGeminiAPIWithRetries = useCallback(async (payload, retries = 3, delay = 1000) => {
-        const apiKey = window.GOOGLE_GEMINI_API_KEY || "gen-lang-client-0783048234";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const apiKey = window.GOOGLE_GEMINI_API_KEY || "AIzaSyCt83YFHZQytF1oKfndYZAI9brdyvi9EAs";
+        const model = profile?.preferredModel || 'gemini-1.5-flash';
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
         let lastError = null;
         const controller = new AbortController();
         abortControllers.current.add(controller);
@@ -560,7 +737,7 @@
           abortControllers.current.delete(controller);
         }
         throw lastError || new Error('Erro desconhecido ao chamar a IA.');
-      }, []);
+      }, [profile]);
 
       const startClick = useCallback(() => {
         clickSound();
@@ -570,8 +747,8 @@
         if (!processedQ) return;
         setIsGeminiLoading(true);
         setGeminiContent(null);
-        const systemPrompt = `Você é Bruno, um professor de matemática amigável, paciente e criativo. O nome do aluno é ${studentName || 'Explorador'} e ele(a) está na faixa etária de ${studentAge || 'idade indefinida'} anos. Adapte sua linguagem e inclua analogias.`;
-        const userQuery = `Reexplique de uma forma diferente porque a resposta correta da pergunta \"${processedQ.question}\" é \"${processedQ.options[processedQ.correct]}\". Inclua um erro comum para evitar e uma dica prática.`;
+        const systemPrompt = `Você é Bruno, um professor de matemática amigável, paciente e criativo. O aluno se chama ${studentName || 'Explorador'} e tem ${studentAge || 'idade indefinida'} anos. Use um tom ${profile.tone}. ${profile.encouragementCue}`;
+        const userQuery = `Reexplique de uma forma diferente porque a resposta correta da pergunta "${processedQ.question}" é "${processedQ.options[processedQ.correct]}". Inclua um erro comum para evitar, uma dica prática e finalize convidando o aluno a compartilhar a ideia com alguém. Contexto desejado: ${profile.storyHook}`;
         const payload = { contents: [{ role: "user", parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
         try {
           const explanation = await callGeminiAPIWithRetries(payload);
@@ -582,15 +759,15 @@
         } finally {
           setIsGeminiLoading(false);
         }
-      }, [processedQ, studentName, studentAge, callGeminiAPIWithRetries, trackAgenda]);
+      }, [processedQ, studentName, studentAge, profile, callGeminiAPIWithRetries, trackAgenda]);
 
       const handleGetSimilarProblem = useCallback(async (isDynamic = false) => {
         setIsGeminiLoading(true);
-        const systemPrompt = `Você é Bruno, um criador de desafios matemáticos para ${studentName || 'o aluno'} (${studentAge || 'idade indefinida'} anos). Crie um problema contextualizado, com narrativa divertida e 4 alternativas (a ordem da resposta correta deve variar).`;
+        const systemPrompt = `Você é Bruno, um criador de desafios matemáticos para ${studentName || 'o aluno'} (${studentAge || 'idade indefinida'} anos). Use um tom ${profile.tone}, traga curiosidade e varie o tipo de pergunta para manter o interesse.`;
         const context = isDynamic
           ? `Contexto adaptativo: módulo ${currentModule}, dificuldade ${difficulty}.` + (processedQ?.skill ? ` Habilidade: ${FRACTION_SKILLS[processedQ.skill]?.label || processedQ.skill}.` : '')
           : buildContext();
-        const userQuery = `Gere um exercício inédito com base no contexto a seguir:\n${context}`;
+        const userQuery = `Gere um exercício inédito com base no contexto a seguir:\n${context}\nExija uma justificativa breve na explicação correta e utilize elementos conforme este direcionamento: ${profile.storyHook}`;
         const schema = {
           type: "OBJECT",
           properties: {
@@ -623,14 +800,14 @@
         } finally {
           setIsGeminiLoading(false);
         }
-      }, [studentName, studentAge, currentModule, difficulty, processedQ, callGeminiAPIWithRetries, buildContext, trackAgenda]);
+      }, [studentName, studentAge, currentModule, difficulty, processedQ, profile, callGeminiAPIWithRetries, buildContext, trackAgenda]);
 
       const handleGetHint = useCallback(async () => {
         if (!processedQ) return;
         setIsHintLoading(true);
         setGeminiHint(null);
-        const systemPrompt = `Você é Bruno, um tutor de matemática. Forneça uma dica curta, inteligente e motivadora para ${studentName || 'o aluno'} (${studentAge || 'idade indefinida'} anos) refletir sobre o problema sem revelar a resposta.`;
-        const userQuery = `Pergunta: ${processedQ.question}. Opções: ${processedQ.options.join(', ')}.`;
+        const systemPrompt = `Você é Bruno, um tutor de matemática. Fale com ${studentName || 'o aluno'} (${studentAge || 'idade indefinida'} anos) em um tom ${profile.tone}. ${profile.encouragementCue}`;
+        const userQuery = `Pergunta: ${processedQ.question}. Opções: ${processedQ.options.join(', ')}. Escreva UMA dica curiosa que aponte o próximo passo sem entregar a resposta.`;
         const payload = { contents: [{ role: "user", parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
         try {
           const hint = await callGeminiAPIWithRetries(payload);
@@ -640,7 +817,7 @@
         } finally {
           setIsHintLoading(false);
         }
-      }, [processedQ, studentName, studentAge, callGeminiAPIWithRetries]);
+      }, [processedQ, studentName, studentAge, profile, callGeminiAPIWithRetries]);
 
       const handleGetMentorFeedback = useCallback(async () => {
         setIsMentorLoading(true);
@@ -655,7 +832,7 @@
           if (strongSkills.length > 0) progressSummary += ` Destaques: ${strongSkills.join(', ')}.`;
           if (weakSkills.length > 0) progressSummary += ` Focos sugeridos: ${weakSkills.join(', ')}.`;
         }
-        const systemPrompt = "Você é Bruno Mayson, um mentor de matemática gentil e encorajador. Resuma em até duas frases.";
+        const systemPrompt = `Você é Bruno Mayson, um mentor de matemática gentil e encorajador. Use um tom ${profile.tone} e siga esta orientação: ${profile.mentorCue} Resuma em até duas frases.`;
         const userQuery = `Aluno: ${studentName || 'Explorador'} (${studentAge || 'idade indefinida'}). Progresso: ${progressSummary}`;
         const payload = { contents: [{ role: "user", parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
         try {
@@ -666,7 +843,7 @@
         } finally {
           setIsMentorLoading(false);
         }
-      }, [completedPlanets, totalStars, skillMastery, studentName, studentAge, callGeminiAPIWithRetries]);
+      }, [completedPlanets, totalStars, skillMastery, studentName, studentAge, profile, callGeminiAPIWithRetries]);
 
       const handleSendChatMessage = useCallback(async (message) => {
         if (isChatLoading) return;
@@ -677,7 +854,7 @@
         setChatHistory(updatedHistory);
         setIsChatLoading(true);
 
-        const systemPrompt = `Você é Bruno Mayson, tutor especialista em matemática e finanças para crianças. O aluno se chama ${studentName || 'Explorador'} e tem ${studentAge || 'idade indefinida'} anos. Seja amigável, objetivo e proponha perguntas desafiadoras quando perceber confiança.`;
+        const systemPrompt = `Você é Bruno Mayson, tutor especialista em matemática e finanças para crianças. O aluno se chama ${studentName || 'Explorador'} e tem ${studentAge || 'idade indefinida'} anos. Use um tom ${profile.tone}. ${profile.chatGuidance}`;
         const payload = {
           contents: updatedHistory,
           systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -694,7 +871,7 @@
         } finally {
           setIsChatLoading(false);
         }
-      }, [isChatLoading, chatHistory, studentName, studentAge, callGeminiAPIWithRetries, trackAgenda]);
+      }, [isChatLoading, chatHistory, studentName, studentAge, profile, callGeminiAPIWithRetries, trackAgenda]);
 
       useEffect(() => {
         if (currentScreen === 'planets' && studentName) handleGetMentorFeedback();
@@ -1106,13 +1283,17 @@
         );
       };
 
+
       const LessonScreen = () => {
         const lesson = moduleLessons[currentModule];
         if (!lesson) return null;
+        const profile = useContext(BrunoProfileContext);
+        const curiosities = moduleCuriosities[currentModule] || [];
+        const missions = moduleMissions[currentModule] || [];
         return (
           <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6 flex items-center justify-center">
-            <div className="max-w-4xl w-full mx-auto">
-              <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 pop">
+            <div className="max-w-4xl w-full mx-auto space-y-6">
+              <div className="bg-white rounded-2xl shadow-lg p-6 pop">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-5xl">{planets.find(p => p.id === currentModule)?.emoji}</span>
@@ -1126,7 +1307,7 @@
                   </button>
                 </div>
               </div>
-              <div className="bg-white rounded-3xl shadow-2xl p-8 mb-6 pop">
+              <div className="bg-white rounded-3xl shadow-2xl p-8 pop">
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-2xl font-bold text-purple-600">{lesson.steps[currentStep].title}</h3>
@@ -1162,6 +1343,33 @@
                   <div key={idx} className={`h-2 rounded-full transition-all ${idx === currentStep ? 'w-8 bg-purple-600' : 'w-2 bg-gray-300'}`} />
                 ))}
               </div>
+              {curiosities.length > 0 && (
+                <div className="bg-white rounded-3xl shadow-2xl p-6 pop">
+                  <h4 className="text-purple-700 font-bold text-xl mb-3">{profile.curiosityLabel}</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {curiosities.map((item, idx) => (
+                      <div key={idx} className="bg-purple-50 border border-purple-200 rounded-2xl p-4">
+                        <h5 className="text-lg font-semibold text-purple-700 mb-1">{item.title}</h5>
+                        <p className="text-sm text-purple-800 leading-relaxed">{item.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {missions.length > 0 && (
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-3xl p-6 pop">
+                  <h4 className="text-indigo-700 font-bold text-xl mb-2">{profile.missionLabel}</h4>
+                  <p className="text-sm text-indigo-600 mb-3">{profile.missionIntro}</p>
+                  <ul className="space-y-2 text-gray-700">
+                    {missions.map((mission, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <span className="text-indigo-500 font-semibold">{idx + 1}.</span>
+                        <span>{mission}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -1331,7 +1539,11 @@
         }
       };
 
-      return <div>{renderScreen()}</div>;
+      return (
+        <BrunoProfileContext.Provider value={profile}>
+          <div>{renderScreen()}</div>
+        </BrunoProfileContext.Provider>
+      );
     }
 
     const root = ReactDOM.createRoot(document.getElementById('app'));

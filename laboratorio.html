@@ -29,6 +29,8 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useMemo, useCallback, useContext } = React;
 
+    const DEFAULT_GEMINI_KEY = "AIzaSyBjf7ZXrmMepFKAR4PZDPsTDwykXIAhFGE";
+
     const AGE_PROFILES = {
       '6-8': {
         tone: 'lúdico, cheio de imaginação e com comparações simples do cotidiano infantil',
@@ -685,10 +687,36 @@
       const [isChatLoading, setIsChatLoading] = useState(false);
       const [aiGeneratedQuestion, setAIGeneratedQuestion] = useState(null);
       const [intelligentAgenda, setIntelligentAgenda] = useState([]);
+      const [apiKey, setApiKey] = useState(() => {
+        if (typeof window === 'undefined') return DEFAULT_GEMINI_KEY;
+        try {
+          const stored = window.localStorage?.getItem('brunoGeminiKey');
+          return window.GOOGLE_GEMINI_API_KEY || stored || DEFAULT_GEMINI_KEY;
+        } catch (error) {
+          console.warn('Não foi possível ler a chave salva localmente.', error);
+          return window.GOOGLE_GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+        }
+      });
+      const [apiKeyStatus, setApiKeyStatus] = useState(null);
       const abortControllers = useRef(new Set());
       const chatHistoryRef = useRef([]);
 
       const profile = useMemo(() => AGE_PROFILES[studentAge] || AGE_PROFILES.default, [studentAge]);
+
+      useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const trimmed = (apiKey || '').trim();
+        window.GOOGLE_GEMINI_API_KEY = trimmed;
+        try {
+          if (trimmed) {
+            window.localStorage?.setItem('brunoGeminiKey', trimmed);
+          } else {
+            window.localStorage?.removeItem('brunoGeminiKey');
+          }
+        } catch (error) {
+          console.warn('Não foi possível armazenar a chave da IA.', error);
+        }
+      }, [apiKey]);
 
       useEffect(() => () => {
         abortControllers.current.forEach(ctrl => ctrl.abort());
@@ -709,8 +737,51 @@
         return `Questão atual: ${processedQ.question}\nAlternativas: ${processedQ.options.join(', ')}\nHabilidade trabalhada: ${concept}.`;
       }, [processedQ, currentModule]);
 
+      const handleApiKeyChange = useCallback((value) => {
+        setApiKey(value);
+        setApiKeyStatus(null);
+      }, []);
+
+      const handleResetApiKey = useCallback(() => {
+        setApiKey(DEFAULT_GEMINI_KEY);
+        setApiKeyStatus({ state: 'info', message: 'Chave padrão restaurada.' });
+      }, []);
+
+      const handleTestApiKey = useCallback(async () => {
+        const key = (apiKey || '').trim();
+        if (!key) {
+          setApiKeyStatus({ state: 'error', message: 'Informe uma chave para testar.' });
+          return;
+        }
+        setApiKeyStatus({ state: 'testing' });
+        const model = (profile?.preferredModel || 'gemini-1.5-flash-latest').replace(/^models\//i, '');
+        const endpoints = [
+          `https://generativelanguage.googleapis.com/v1/models/${model}?key=${key}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}?key=${key}`,
+        ];
+        let lastError = null;
+        for (const endpoint of endpoints) {
+          try {
+            const response = await fetch(endpoint, { method: 'GET' });
+            if (!response.ok) throw new Error(`Status ${response.status}`);
+            const data = await response.json();
+            setApiKeyStatus({
+              state: 'success',
+              message: `Tudo certo! Modelo disponível: ${data.displayName || data.name || model}.`,
+            });
+            return;
+          } catch (error) {
+            lastError = error instanceof Error ? error : new Error(String(error));
+          }
+        }
+        setApiKeyStatus({
+          state: 'error',
+          message: `Não consegui confirmar a chave (${lastError?.message || 'motivo desconhecido'}).`,
+        });
+      }, [apiKey, profile]);
+
       const callGeminiAPIWithRetries = useCallback(async (payload, retries = 3, delay = 1000) => {
-        const apiKey = window.GOOGLE_GEMINI_API_KEY || "AIzaSyBjf7ZXrmMepFKAR4PZDPsTDwykXIAhFGE";
+        const apiKey = window.GOOGLE_GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
         const preferred = (profile?.preferredModel || 'gemini-1.5-flash-latest').replace(/^models\//i, '');
         const modelCandidates = Array.from(new Set([
           preferred,
@@ -1233,6 +1304,50 @@
               </div>
               <div className="mt-4 bg-white/20 rounded-full h-3">
                 <div className="bg-yellow-400 h-full rounded-full transition-all" style={{ width: `${(completedPlanets.length / planets.length) * 100}%` }}></div>
+              </div>
+              <div className="mt-6 bg-black/20 border border-white/20 rounded-2xl p-4">
+                <div className="flex flex-col md:flex-row md:items-end gap-4">
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-white/70 mb-1">Chave de API da IA Gemini</label>
+                    <input
+                      type="password"
+                      inputMode="text"
+                      value={apiKey}
+                      onChange={(event) => handleApiKeyChange(event.target.value)}
+                      placeholder="Cole sua chave que começa com AIza..."
+                      className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleTestApiKey}
+                      className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:scale-105 transition-all"
+                    >
+                      Testar chave
+                    </button>
+                    <button
+                      onClick={handleResetApiKey}
+                      className="bg-white/10 text-white font-semibold px-4 py-3 rounded-xl border border-white/20 hover:bg-white/20 transition-all"
+                    >
+                      Usar padrão
+                    </button>
+                  </div>
+                </div>
+                {apiKeyStatus && (
+                  <p
+                    className={`mt-3 text-sm ${
+                      apiKeyStatus.state === 'success'
+                        ? 'text-green-200'
+                        : apiKeyStatus.state === 'error'
+                        ? 'text-rose-200'
+                        : apiKeyStatus.state === 'testing'
+                        ? 'text-amber-200 animate-pulse'
+                        : 'text-sky-200'
+                    }`}
+                  >
+                    {apiKeyStatus.state === 'testing' ? 'Testando chave...' : apiKeyStatus.message}
+                  </p>
+                )}
               </div>
               {(completedPlanets.includes('fracoes') || totalStars > 0) && (
                 <div className="mt-4 bg-white/10 rounded-xl p-4">

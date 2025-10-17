@@ -38,7 +38,7 @@
         missionLabel: 'Missões brincadeiras para experimentar depois',
         missionIntro: 'Escolha uma missão divertida para colocar em prática quando terminar a aula:',
         speech: { rate: 1.05, pitch: 1.18 },
-        preferredModel: 'gemini-1.5-flash',
+        preferredModel: 'gemini-1.5-flash-latest',
         storyHook: 'Traga personagens amigáveis, comidas saborosas e brincadeiras cooperativas.',
         mentorCue: 'Mostre orgulho do esforço, lembre que errar é parte da descoberta e sugira uma brincadeira para revisar.',
       },
@@ -50,7 +50,7 @@
         missionLabel: 'Desafios para explorar depois da aula',
         missionIntro: 'Quando terminar, escolha um destes desafios rápidos para testar seu conhecimento:',
         speech: { rate: 1, pitch: 1.08 },
-        preferredModel: 'gemini-1.5-flash',
+        preferredModel: 'gemini-1.5-flash-latest',
         storyHook: 'Conecte a situações de escola, esportes e tecnologia que exijam estratégia.',
         mentorCue: 'Valorize a independência, convide o aluno a ensinar alguém e sugira aplicar o conceito em casa.',
       },
@@ -62,7 +62,7 @@
         missionLabel: 'Missões estratégicas para consolidar o aprendizado',
         missionIntro: 'Selecione uma missão para transformar o conteúdo em ação concreta:',
         speech: { rate: 0.94, pitch: 1 },
-        preferredModel: 'gemini-1.5-flash',
+        preferredModel: 'gemini-1.5-flash-latest',
         storyHook: 'Construa cenários ligados a projetos, finanças pessoais e desafios acadêmicos.',
         mentorCue: 'Estimule metas de longo prazo, cite aplicações profissionais e indique próximos passos de aprofundamento.',
       },
@@ -74,7 +74,7 @@
         missionLabel: 'Missões para continuar praticando',
         missionIntro: 'Separei algumas missões extras para você experimentar quando quiser:',
         speech: { rate: 1, pitch: 1.05 },
-        preferredModel: 'gemini-1.5-flash',
+        preferredModel: 'gemini-1.5-flash-latest',
         storyHook: 'Use exemplos cotidianos e metáforas amigáveis.',
         mentorCue: 'Celebre progresso e indique um próximo passo prático.',
       },
@@ -686,6 +686,7 @@
       const [aiGeneratedQuestion, setAIGeneratedQuestion] = useState(null);
       const [intelligentAgenda, setIntelligentAgenda] = useState([]);
       const abortControllers = useRef(new Set());
+      const chatHistoryRef = useRef([]);
 
       const profile = useMemo(() => AGE_PROFILES[studentAge] || AGE_PROFILES.default, [studentAge]);
 
@@ -693,6 +694,10 @@
         abortControllers.current.forEach(ctrl => ctrl.abort());
         abortControllers.current.clear();
       }, []);
+
+      useEffect(() => {
+        chatHistoryRef.current = chatHistory;
+      }, [chatHistory]);
 
       const trackAgenda = useCallback((entry) => {
         setIntelligentAgenda(prev => [entry, ...prev].slice(0, 5));
@@ -705,37 +710,55 @@
       }, [processedQ, currentModule]);
 
       const callGeminiAPIWithRetries = useCallback(async (payload, retries = 3, delay = 1000) => {
-        const apiKey = window.GOOGLE_GEMINI_API_KEY || "AIzaSyCt83YFHZQytF1oKfndYZAI9brdyvi9EAs";
-        const model = profile?.preferredModel || 'gemini-1.5-flash';
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const apiKey = window.GOOGLE_GEMINI_API_KEY || "AIzaSyBjf7ZXrmMepFKAR4PZDPsTDwykXIAhFGE";
+        const preferred = (profile?.preferredModel || 'gemini-1.5-flash-latest').replace(/^models\//i, '');
+        const modelCandidates = Array.from(new Set([
+          preferred,
+          preferred.endsWith('-latest') ? preferred.replace(/-latest$/, '') : `${preferred}-latest`,
+        ].filter(Boolean)));
+        const endpoints = modelCandidates.flatMap(modelName => ([
+          `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+        ]));
+
         let lastError = null;
         const controller = new AbortController();
         abortControllers.current.add(controller);
+
         try {
-          for (let attempt = 0; attempt < retries; attempt++) {
-            try {
-              const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-                signal: controller.signal,
-              });
-              if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
-              const result = await response.json();
-              const candidate = result.candidates?.[0];
-              const text = candidate?.content?.parts?.map(part => part.text).join('\n');
-              if (text) return text;
-              throw new Error('Resposta da IA sem conteúdo utilizável.');
-            } catch (error) {
-              lastError = error;
-              if (controller.signal.aborted) throw new Error('Requisição cancelada');
-              if (attempt === retries - 1) throw error;
-              await new Promise(res => setTimeout(res, delay * Math.pow(2, attempt)));
+          for (const endpoint of endpoints) {
+            for (let attempt = 0; attempt < retries; attempt++) {
+              try {
+                const response = await fetch(endpoint, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload),
+                  signal: controller.signal,
+                });
+                if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+                const text = candidate?.content?.parts?.map(part => part.text).join('\n');
+                if (text) return text;
+                throw new Error('Resposta da IA sem conteúdo utilizável.');
+              } catch (error) {
+                lastError = error instanceof Error ? error : new Error(String(error));
+                if (controller.signal.aborted) throw new Error('Requisição cancelada');
+
+                const is404 = /404/.test(lastError.message);
+                const isLastAttempt = attempt === retries - 1;
+                if (is404 || isLastAttempt) {
+                  break;
+                }
+                await new Promise(res => setTimeout(res, delay * Math.pow(2, attempt)));
+              }
             }
+            if (controller.signal.aborted) break;
           }
         } finally {
           abortControllers.current.delete(controller);
         }
+
         throw lastError || new Error('Erro desconhecido ao chamar a IA.');
       }, [profile]);
 
@@ -850,7 +873,8 @@
         const trimmed = (message || '').trim();
         if (!trimmed) return;
         const userMessage = { role: "user", parts: [{ text: trimmed }] };
-        const updatedHistory = [...chatHistory, userMessage];
+        const updatedHistory = [...chatHistoryRef.current, userMessage];
+        chatHistoryRef.current = updatedHistory;
         setChatHistory(updatedHistory);
         setIsChatLoading(true);
 
@@ -862,16 +886,29 @@
 
         try {
           const response = await callGeminiAPIWithRetries(payload);
-          setChatHistory(prev => [...prev, { role: "model", parts: [{ text: response }] }]);
+          setChatHistory(prev => {
+            const next = [...prev, { role: "model", parts: [{ text: response }] }];
+            chatHistoryRef.current = next;
+            return next;
+          });
           if (/tente responder|qual seria|poderia me dizer/i.test(response)) {
             trackAgenda({ type: 'pergunta', message: 'Bruno lançou um desafio na conversa.' });
           }
         } catch (error) {
-          setChatHistory(prev => [...prev, { role: "model", parts: [{ text: `Ops! Não consegui responder agora (${error.message}). Tente novamente.` }] }]);
+          setChatHistory(prev => {
+            const next = [...prev, { role: "model", parts: [{ text: `Ops! Não consegui responder agora (${error.message}). Tente novamente.` }] }];
+            chatHistoryRef.current = next;
+            return next;
+          });
         } finally {
           setIsChatLoading(false);
         }
-      }, [isChatLoading, chatHistory, studentName, studentAge, profile, callGeminiAPIWithRetries, trackAgenda]);
+      }, [isChatLoading, studentName, studentAge, profile, callGeminiAPIWithRetries, trackAgenda]);
+
+      const handleChatBack = useCallback(() => {
+        startClick();
+        setCurrentScreen('planets');
+      }, [startClick]);
 
       useEffect(() => {
         if (currentScreen === 'planets' && studentName) handleGetMentorFeedback();
@@ -1531,7 +1568,7 @@
               <ChatView
                 chatHistory={chatHistory}
                 isChatLoading={isChatLoading}
-                onBack={() => setCurrentScreen('planets')}
+                onBack={handleChatBack}
                 onSend={handleSendChatMessage}
               />
             );

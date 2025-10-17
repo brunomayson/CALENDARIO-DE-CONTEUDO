@@ -27,7 +27,7 @@
   <div id="app"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useRef, useMemo, useCallback, useTransition, useDeferredValue } = React;
+    const { useState, useEffect, useRef, useMemo, useCallback, useTransition } = React;
 
     const audioBank = {
       ok: "data:audio/wav;base64,UklGRlgEAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABgAZGF0YQQEAACAgP/9/v38/PX36fLp9Ofz6fXr9vH59Pr6/QD+/f/9AAUAGgA9AFIAcwCPAKcAtgDJAOEA7AECAU4BpAGyAOsBFgGBAcwB9QIZApYDxwH/AiMClQPSAfsCLgKyA+kCAwMIAesB5wHYAREAxgHjAYIBjwCxAP0A7wDeAPQA7gD8AP8A/gD9APMA6gDBALEAowCLAJYAkgCRAJEAlQCiAKgArACxALUAvgDFAMsA2wDpAP8BAwINAhwCLgA9ADUAJgAgAB0AHAAcABwAHgAgACIAJgAoACoALAAvADIANQA4ADsAPgBCAEUASAA=",
@@ -384,8 +384,7 @@
       const [isChatLoading, setIsChatLoading] = useState(false);
       const [aiGeneratedQuestion, setAIGeneratedQuestion] = useState(null);
       const [intelligentAgenda, setIntelligentAgenda] = useState([]);
-      const [isPending, startTransition] = useTransition();
-      const deferredChatInput = useDeferredValue(chatInput);
+      const [, startTransition] = useTransition();
       const abortControllers = useRef(new Set());
 
       useEffect(() => () => {
@@ -395,6 +394,14 @@
 
       const trackAgenda = useCallback((entry) => {
         setIntelligentAgenda(prev => [entry, ...prev].slice(0, 5));
+      }, []);
+
+      const handleNameInputChange = useCallback((event) => {
+        setNameInput(event.target.value);
+      }, []);
+
+      const handleChatInputChange = useCallback((event) => {
+        setChatInput(event.target.value);
       }, []);
 
       const buildContext = useCallback(() => {
@@ -801,7 +808,7 @@
               <input
                 type="text"
                 value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
+                onChange={handleNameInputChange}
                 onKeyDown={(e) => e.key === 'Enter' && handleNameSubmit()}
                 className="w-full bg-transparent text-white text-3xl text-center font-bold border-b-2 border-yellow-300 focus:outline-none placeholder-white/50"
                 placeholder="Digite seu nome aqui"
@@ -1244,8 +1251,8 @@
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  value={deferredChatInput}
-                  onChange={e => setChatInput(e.target.value)}
+                  value={chatInput}
+                  onChange={handleChatInputChange}
                   onKeyDown={e => e.key === 'Enter' && handleSendChatMessage()}
                   placeholder="Faça uma pergunta para o Bruno..."
                   className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
